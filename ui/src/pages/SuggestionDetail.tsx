@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { ArrowBack, CheckCircle, Cancel, Refresh } from '@mui/icons-material';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import VideoPlayer from '../components/VideoPlayer';
 
 interface SuggestionDetailData {
@@ -99,7 +100,7 @@ const SuggestionDetail: React.FC = () => {
       navigate('/review');
     } catch (err) {
       console.error('Failed to approve:', err);
-      alert('Failed to approve suggestion');
+      toast.error('Failed to approve suggestion');
     }
   };
 
@@ -112,13 +113,13 @@ const SuggestionDetail: React.FC = () => {
       navigate('/review');
     } catch (err) {
       console.error('Failed to reject:', err);
-      alert('Failed to reject suggestion');
+      toast.error('Failed to reject suggestion');
     }
   };
 
   const handleReprocess = async () => {
     if (!suggestion?.video_id) {
-      alert('Video ID not available');
+      toast.error('Video ID not available');
       return;
     }
     
@@ -129,11 +130,11 @@ const SuggestionDetail: React.FC = () => {
     try {
       setReprocessing(true);
       const response = await axios.post(`${apiUrl}/videos/${suggestion.video_id}/reprocess`);
-      alert(`Video is being reprocessed. New job ID: ${response.data.job_id}`);
+      toast.success(`Video is being reprocessed. New job ID: ${response.data.job_id}`);
       navigate('/review');
     } catch (err: any) {
       console.error('Failed to reprocess video:', err);
-      alert(`Failed to reprocess video: ${err.response?.data?.detail || err.message}`);
+      toast.error(`Failed to reprocess video: ${err.response?.data?.detail || err.message}`);
     } finally {
       setReprocessing(false);
     }
@@ -274,8 +275,8 @@ const SuggestionDetail: React.FC = () => {
                   Video Preview
                 </Typography>
                 <VideoPlayer 
-                  sceneId={suggestion.video_id}
-                  sceneTitle={suggestion.video_title}
+                  videoId={suggestion.video_id}
+                  videoTitle={suggestion.video_title}
                   seekTo={seekTo}
                 />
               </CardContent>

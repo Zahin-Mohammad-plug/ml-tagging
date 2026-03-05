@@ -619,7 +619,7 @@ const ReviewQueue: React.FC = () => {
                   const currentFrameIndex = getCurrentFrameIndex(suggestion.id);
                   const currentFrame = suggestion.evidence_frames[currentFrameIndex];
                   const imageUrl = currentFrame.thumbnail_url || 
-                    (currentFrame.signals?.frame_id ? `${apiUrl}/api/frames/${currentFrame.signals.frame_id}/image` : null);
+                    (currentFrame.signals?.frame_id ? `/api/frames/${currentFrame.signals.frame_id}/image` : null);
                   
                   return imageUrl ? (
                     <Box 

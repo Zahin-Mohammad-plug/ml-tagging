@@ -2,15 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 interface VideoPlayerProps {
-  sceneId: string;
-  sceneTitle?: string;
+  videoId: string;
+  videoTitle?: string;
   videoUrl?: string;
   seekTo?: number; // Timestamp in seconds to seek to
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
-  sceneId, 
-  sceneTitle,
+  videoId, 
+  videoTitle,
   videoUrl,
   seekTo
 }) => {
@@ -19,7 +19,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
   // Use provided videoUrl or construct one from the API
-  const streamUrl = videoUrl || `${apiUrl}/videos/${sceneId}/stream`;
+  const streamUrl = videoUrl || `${apiUrl}/videos/${videoId}/stream`;
 
   // Handle seeking when seekTo prop changes
   useEffect(() => {
@@ -89,7 +89,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       
       <Box sx={{ p: 1, bgcolor: 'grey.900', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="body2" color="white" noWrap sx={{ flex: 1 }}>
-          {sceneTitle || `Video ${sceneId}`}
+          {videoTitle || `Video ${videoId}`}
         </Typography>
       </Box>
     </Box>

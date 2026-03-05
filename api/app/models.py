@@ -82,8 +82,10 @@ class TagContext(BaseModel):
     
 # Suggestion Models
 class Suggestion(BaseModel):
+    model_config = {"populate_by_name": True}
+    
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique suggestion ID")
-    video_id: str = Field(..., description="Video ID")
+    video_id: str = Field(..., alias="scene_id", description="Video ID")
     tag_name: str = Field(..., description="Suggested tag name")
     confidence: float = Field(..., description="Overall confidence score")
     status: SuggestionStatus = Field(default=SuggestionStatus.PENDING, description="Suggestion status")
@@ -134,8 +136,10 @@ class TextBasedSuggestionsResponse(BaseModel):
     
 # Job Models
 class Job(BaseModel):
+    model_config = {"populate_by_name": True}
+    
     job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    video_id: str
+    video_id: str = Field(..., alias="scene_id")
     status: JobStatus = Field(default=JobStatus.QUEUED)
     priority: JobPriority = Field(default=JobPriority.NORMAL)
     created_at: datetime = Field(default_factory=datetime.utcnow)

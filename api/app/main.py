@@ -272,6 +272,7 @@ async def list_videos(
                     "title": row.get("title") or f"Video {row['scene_id']}",
                     "created_at": row.get("created_at"),
                     "file_path": row.get("file_path"),
+                    "duration": row.get("duration_seconds"),
                 })
 
             return {
@@ -308,6 +309,7 @@ async def get_video(
                 "title": row.get("title") or f"Video {row['scene_id']}",
                 "created_at": row.get("created_at"),
                 "file_path": row.get("file_path"),
+                "duration": row.get("duration_seconds"),
             }
 
     except HTTPException:
@@ -466,7 +468,7 @@ async def get_active_jobs(
             "jobs": [
                 {
                     "job_id": job.job_id,
-                    "video_id": job.scene_id,
+                    "video_id": job.video_id,
                     "status": job.status.value,
                     "priority": job.priority.value if job.priority else "normal",
                     "created_at": job.created_at.isoformat() if job.created_at else None,
@@ -553,7 +555,7 @@ async def get_job_status(
         
         return {
             "job_id": job.job_id,
-            "video_id": job.scene_id,
+            "video_id": job.video_id,
             "status": job.status.value,
             "progress": job.progress,
             "created_at": job.created_at.isoformat() if job.created_at else None,
@@ -624,7 +626,7 @@ async def list_jobs(
             "jobs": [
                 {
                     "job_id": job.job_id,
-                    "video_id": job.scene_id,
+                    "video_id": job.video_id,
                     "status": job.status.value,
                     "progress": job.progress,
                     "created_at": job.created_at.isoformat() if job.created_at else None,

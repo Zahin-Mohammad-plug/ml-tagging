@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
-  CardMedia,
   CardContent,
   Typography,
   Grid,
@@ -21,9 +20,9 @@ import { Search as SearchIcon, PlayArrow as PlayIcon } from '@mui/icons-material
 interface Scene {
   video_id: string;
   title: string;
-  screenshot: string;
-  duration: number;
-  tags: string[];
+  duration?: number;
+  file_path?: string;
+  created_at?: string;
   is_processed?: boolean;
 }
 
@@ -93,8 +92,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
   };
 
   const filteredScenes = scenes.filter((scene) =>
-    scene.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (scene.tags || []).some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    scene.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const handleSceneClick = (sceneId: string) => {
@@ -219,13 +217,17 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                       }}
                     />
                   )}
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={`${apiUrl}${scene.screenshot}`}
-                    alt={scene.title}
-                    sx={{ objectFit: 'cover' }}
-                  />
+                  <Box
+                    sx={{
+                      height: 200,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'grey.800',
+                    }}
+                  >
+                    <PlayIcon sx={{ fontSize: 60, color: 'grey.500' }} />
+                  </Box>
                   {/* Play icon overlay */}
                   {!multiSelect && (
                     <Box
@@ -251,7 +253,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                   )}
                   
                   {/* Duration badge */}
-                  {scene.duration > 0 && (
+                  {scene.duration && scene.duration > 0 && (
                   <Chip
                     label={formatDuration(scene.duration)}
                     size="small"
@@ -292,31 +294,6 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                       />
                     )}
                   </Stack>
-
-                  {(scene.tags || []).length > 0 && (
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5} sx={{ mt: 0.5 }}>
-                      <Chip
-                        label={`${scene.tags.length} tag${scene.tags.length !== 1 ? 's' : ''}`}
-                        size="small"
-                        sx={{ fontSize: '0.7rem', height: 20, bgcolor: 'primary.main', color: 'white' }}
-                      />
-                      {scene.tags.slice(0, 2).map((tag, index) => (
-                        <Chip
-                          key={index}
-                          label={tag}
-                          size="small"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      ))}
-                      {scene.tags.length > 2 && (
-                        <Chip
-                          label={`+${scene.tags.length - 2}`}
-                          size="small"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      )}
-                    </Stack>
-                  )}
                 </CardContent>
               </Card>
             </Grid>
