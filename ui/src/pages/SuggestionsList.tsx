@@ -24,12 +24,12 @@ import axios from 'axios';
 
 interface Suggestion {
   id: string;
-  scene_id: string;
+  video_id: string;
   tag_name: string;
   confidence: number;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
-  scene_title?: string;
+  video_title?: string;
 }
 
 const SuggestionsList: React.FC = () => {
@@ -39,7 +39,7 @@ const SuggestionsList: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const navigate = useNavigate();
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
 
   const fetchSuggestions = useCallback(async () => {
     try {
@@ -157,7 +157,7 @@ const SuggestionsList: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Scene</TableCell>
+                <TableCell>Video</TableCell>
                 <TableCell>Tag</TableCell>
                 <TableCell>Confidence</TableCell>
                 <TableCell>Status</TableCell>
@@ -170,7 +170,7 @@ const SuggestionsList: React.FC = () => {
                 <TableRow key={suggestion.id} hover>
                   <TableCell>
                     <Typography variant="body2">
-                      {suggestion.scene_title || `Scene ${suggestion.scene_id}`}
+                      {suggestion.video_title || `Video ${suggestion.video_id}`}
                     </Typography>
                   </TableCell>
                   <TableCell>

@@ -18,8 +18,8 @@ import VideoPlayer from '../components/VideoPlayer';
 
 interface SuggestionDetailData {
   id: string;
-  scene_id: string;
-  scene_title?: string;
+  video_id: string;
+  video_title?: string;
   tag_context: {
     tag_name: string;
     parent_tags?: string[];
@@ -55,7 +55,7 @@ const SuggestionDetail: React.FC = () => {
   const [reprocessing, setReprocessing] = useState(false);
   const [seekTo, setSeekTo] = useState<number | undefined>(undefined);
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
 
   // Check for seekTo parameter in URL
   useEffect(() => {
@@ -117,23 +117,23 @@ const SuggestionDetail: React.FC = () => {
   };
 
   const handleReprocess = async () => {
-    if (!suggestion?.scene_id) {
-      alert('Scene ID not available');
+    if (!suggestion?.video_id) {
+      alert('Video ID not available');
       return;
     }
     
-    if (!window.confirm(`Are you sure you want to reprocess scene ${suggestion.scene_id}? This will delete all existing suggestions and jobs for this scene and create a new processing job.`)) {
+    if (!window.confirm(`Are you sure you want to reprocess video ${suggestion.video_id}? This will delete all existing suggestions and jobs for this video and create a new processing job.`)) {
       return;
     }
     
     try {
       setReprocessing(true);
-      const response = await axios.post(`${apiUrl}/scenes/${suggestion.scene_id}/reprocess`);
-      alert(`Scene is being reprocessed. New job ID: ${response.data.job_id}`);
+      const response = await axios.post(`${apiUrl}/videos/${suggestion.video_id}/reprocess`);
+      alert(`Video is being reprocessed. New job ID: ${response.data.job_id}`);
       navigate('/review');
     } catch (err: any) {
-      console.error('Failed to reprocess scene:', err);
-      alert(`Failed to reprocess scene: ${err.response?.data?.detail || err.message}`);
+      console.error('Failed to reprocess video:', err);
+      alert(`Failed to reprocess video: ${err.response?.data?.detail || err.message}`);
     } finally {
       setReprocessing(false);
     }
@@ -249,14 +249,14 @@ const SuggestionDetail: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Scene Information
+                  Video Information
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Scene ID: {suggestion.scene_id}
+                  Video ID: {suggestion.video_id}
                 </Typography>
-                {suggestion.scene_title && (
+                {suggestion.video_title && (
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Title: {suggestion.scene_title}
+                    Title: {suggestion.video_title}
                   </Typography>
                 )}
                 <Typography variant="body2" color="text.secondary">
@@ -274,8 +274,8 @@ const SuggestionDetail: React.FC = () => {
                   Video Preview
                 </Typography>
                 <VideoPlayer 
-                  sceneId={suggestion.scene_id}
-                  sceneTitle={suggestion.scene_title}
+                  sceneId={suggestion.video_id}
+                  sceneTitle={suggestion.video_title}
                   seekTo={seekTo}
                 />
               </CardContent>
@@ -417,7 +417,7 @@ const SuggestionDetail: React.FC = () => {
                 onClick={handleReprocess}
                 disabled={reprocessing}
               >
-                {reprocessing ? 'Reprocessing...' : 'Reprocess Scene'}
+                {reprocessing ? 'Reprocessing...' : 'Reprocess Video'}
               </Button>
             </Box>
           </Grid>

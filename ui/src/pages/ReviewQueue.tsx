@@ -34,8 +34,8 @@ import { toast } from 'react-hot-toast';
 
 interface SuggestionItem {
   id: string;
-  scene_id: string;
-  scene_title?: string;
+  video_id: string;
+  video_title?: string;
   tag_context: {
     tag_name: string;
     parent_tags?: string[];
@@ -58,7 +58,7 @@ interface SuggestionItem {
 }
 
 interface SceneOption {
-  scene_id: string;
+  video_id: string;
   title: string;
 }
 
@@ -83,7 +83,7 @@ const ReviewQueue: React.FC = () => {
   const [deletingAll, setDeletingAll] = useState(false);
   const navigate = useNavigate();
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
 
   useEffect(() => {
     // Load default review threshold from settings
@@ -113,7 +113,7 @@ const ReviewQueue: React.FC = () => {
     // Load available scenes for filter
     const loadScenes = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/suggestions/scenes`);
+        const response = await axios.get(`${apiUrl}/suggestions/videos`);
         const scenes = response.data || [];
         console.log('Loaded scenes for filter:', scenes.length, scenes);
         setAvailableScenes(scenes);
@@ -138,7 +138,7 @@ const ReviewQueue: React.FC = () => {
       }
       
       if (sceneFilter !== 'all') {
-        params.scene_id = sceneFilter;
+        params.video_id = sceneFilter;
       }
       
       // Use min_confidence as a display filter (not a processing filter)
@@ -210,7 +210,7 @@ const ReviewQueue: React.FC = () => {
         setTotalCount(prev => Math.max(0, prev - 1));
       }
       
-      toast.success('Tag approved and applied to scene!');
+      toast.success('Tag approved and applied to video!');
     } catch (err: any) {
       // Revert optimistic update on error
       fetchSuggestions();
@@ -440,7 +440,7 @@ const ReviewQueue: React.FC = () => {
           </FormControl>
 
           <FormControl component="fieldset" sx={{ minWidth: 250 }}>
-            <FormLabel component="legend">Filter by Scene</FormLabel>
+            <FormLabel component="legend">Filter by Video</FormLabel>
             <RadioGroup
               row
               value={sceneFilter}
@@ -450,13 +450,13 @@ const ReviewQueue: React.FC = () => {
                 setPage(1); // Reset to first page
               }}
             >
-              <FormControlLabel value="all" control={<Radio />} label="All Scenes" />
+              <FormControlLabel value="all" control={<Radio />} label="All Videos" />
               {availableScenes.map((scene) => (
                 <FormControlLabel
-                  key={scene.scene_id}
-                  value={scene.scene_id}
+                  key={scene.video_id}
+                  value={scene.video_id}
                   control={<Radio />}
-                  label={`${scene.title} (ID: ${scene.scene_id})`}
+                  label={`${scene.title} (ID: ${scene.video_id})`}
                 />
               ))}
             </RadioGroup>
@@ -474,7 +474,7 @@ const ReviewQueue: React.FC = () => {
             >
               <MenuItem value="confidence">Confidence</MenuItem>
               <MenuItem value="date">Date</MenuItem>
-              <MenuItem value="scene">Scene ID</MenuItem>
+              <MenuItem value="scene">Video ID</MenuItem>
             </Select>
           </FormControl>
 
@@ -747,7 +747,7 @@ const ReviewQueue: React.FC = () => {
                         {suggestion.tag_context.tag_name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Scene: {suggestion.scene_title || suggestion.scene_id}
+                        Video: {suggestion.video_title || suggestion.video_id}
                       </Typography>
                     </Box>
                     

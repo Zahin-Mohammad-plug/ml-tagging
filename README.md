@@ -38,7 +38,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The UI will be available at **http://localhost:3001** and the API at **http://localhost:8888**.
+The UI will be available at **http://localhost:3001** and the API at **http://localhost:9898**.
 
 ## Tag Prompts
 

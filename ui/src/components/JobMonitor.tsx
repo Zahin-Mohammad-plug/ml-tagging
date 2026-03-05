@@ -58,7 +58,7 @@ interface JobProgress {
 
 interface Job {
   job_id: string;
-  scene_id: string;
+  video_id: string;
   status: string;
   progress: JobProgress;
   created_at: string;
@@ -88,7 +88,7 @@ const JobMonitor: React.FC<JobMonitorProps> = ({
   const [deleting, setDeleting] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
 
   const fetchJob = useCallback(async (isInitialLoad: boolean = false) => {
     if (!jobId) return;
@@ -181,20 +181,20 @@ const JobMonitor: React.FC<JobMonitorProps> = ({
   const handleReprocess = async () => {
     if (!job) return;
     
-    if (!window.confirm(`Are you sure you want to reprocess scene ${job.scene_id}? This will delete existing suggestions and create a new job.`)) {
+    if (!window.confirm(`Are you sure you want to reprocess video ${job.video_id}? This will delete existing suggestions and create a new job.`)) {
       return;
     }
 
     try {
       setReprocessing(true);
       setError(null);
-      const response = await fetch(`${apiUrl}/scenes/${job.scene_id}/reprocess`, {
+      const response = await fetch(`${apiUrl}/videos/${job.video_id}/reprocess`, {
         method: 'POST',
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to reprocess scene');
+        throw new Error(errorData.detail || 'Failed to reprocess video');
       }
       
       const data = await response.json();
@@ -207,7 +207,7 @@ const JobMonitor: React.FC<JobMonitorProps> = ({
         onComplete();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reprocess scene');
+      setError(err instanceof Error ? err.message : 'Failed to reprocess video');
     } finally {
       setReprocessing(false);
     }
@@ -423,7 +423,7 @@ const JobMonitor: React.FC<JobMonitorProps> = ({
             {getStatusIcon(job.status)}
             <Box>
               <Typography variant="h6">
-                Processing Scene {job.scene_id}
+                Processing Video {job.video_id}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Job ID: {job.job_id.slice(0, 8)}...

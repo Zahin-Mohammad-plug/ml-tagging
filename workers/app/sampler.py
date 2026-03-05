@@ -194,7 +194,10 @@ class SamplerTask(Task):
         
         async def store_frames():
             # Use direct database connection to avoid pool conflicts
-            connection = await asyncpg.connect(self.settings.database_url)
+            db_url = self.settings.database_url
+            if db_url.startswith("postgresql+asyncpg://"):
+                db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+            connection = await asyncpg.connect(db_url)
             
             frame_ids_async = []
             

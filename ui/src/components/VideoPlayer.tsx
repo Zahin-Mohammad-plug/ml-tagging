@@ -17,9 +17,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasSeeked, setHasSeeked] = useState(false);
   
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
   // Use provided videoUrl or construct one from the API
-  const streamUrl = videoUrl || `${apiUrl}/scenes/${sceneId}/stream`;
+  const streamUrl = videoUrl || `${apiUrl}/videos/${sceneId}/stream`;
 
   // Handle seeking when seekTo prop changes
   useEffect(() => {
@@ -89,7 +89,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       
       <Box sx={{ p: 1, bgcolor: 'grey.900', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="body2" color="white" noWrap sx={{ flex: 1 }}>
-          {sceneTitle || `Scene ${sceneId}`}
+          {sceneTitle || `Video ${sceneId}`}
         </Typography>
       </Box>
     </Box>

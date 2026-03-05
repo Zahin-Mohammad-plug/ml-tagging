@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # Security
     api_secret_key: str = "dev_secret_key_change_in_production"
-    cors_origins: Union[List[str], str] = "http://localhost:3000,http://localhost:9999"
+    cors_origins: Union[List[str], str] = "http://localhost:3000,http://localhost:3001,http://localhost:9999"
     
     @field_validator('cors_origins', mode='before')
     @classmethod

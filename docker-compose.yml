@@ -64,7 +64,7 @@ services:
       
       # Security
       API_SECRET_KEY: ${API_SECRET_KEY:-dev_secret_key_change_in_production}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:9999}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:9999}
       
       # Processing Configuration
       MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-3}

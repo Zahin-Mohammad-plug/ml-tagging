@@ -46,7 +46,7 @@ interface SettingsData {
 }
 
 const Settings: React.FC = () => {
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
   
   const [settings, setSettings] = useState<SettingsData>({});
   const [loading, setLoading] = useState(true);

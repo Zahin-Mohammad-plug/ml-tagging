@@ -7,6 +7,7 @@ to generate calibrated tag suggestions with evidence.
 
 import uuid
 import json as json_module
+import os
 from typing import Dict, Any, List, Tuple, Set
 from collections import defaultdict
 from celery import Task

@@ -40,7 +40,7 @@ const SceneBrowser: React.FC<SceneBrowserProps> = ({ onSelectScene, open, onClos
   const [error, setError] = useState<string | null>(null);
   const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null);
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
 
   // Fetch recent scenes on open
   useEffect(() => {
@@ -69,18 +69,18 @@ const SceneBrowser: React.FC<SceneBrowserProps> = ({ onSelectScene, open, onClos
     setError(null);
     try {
       // Try to fetch the scene by ID
-      const response = await axios.get(`${apiUrl}/scenes/${searchQuery}`);
+      const response = await axios.get(`${apiUrl}/videos/${searchQuery}`);
       const scene = response.data;
       
       setScenes([{
         id: scene.id,
-        title: scene.title || `Scene ${scene.id}`,
+        title: scene.title || `Video ${scene.id}`,
         path: scene.path,
         duration: scene.duration,
         tags: scene.tags || []
       }]);
     } catch (err: any) {
-      setError(`Scene not found: ${searchQuery}`);
+      setError(`Video not found: ${searchQuery}`);
       setScenes([]);
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ const SceneBrowser: React.FC<SceneBrowserProps> = ({ onSelectScene, open, onClos
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Browse Scenes</Typography>
+          <Typography variant="h6">Browse Videos</Typography>
           <IconButton onClick={onClose}>
             <Close />
           </IconButton>
@@ -108,7 +108,7 @@ const SceneBrowser: React.FC<SceneBrowserProps> = ({ onSelectScene, open, onClos
         <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
           <TextField
             fullWidth
-            placeholder="Enter Scene ID (e.g., 2195)"
+            placeholder="Enter Video ID (e.g., 2195)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -133,7 +133,7 @@ const SceneBrowser: React.FC<SceneBrowserProps> = ({ onSelectScene, open, onClos
 
         {!loading && scenes.length === 0 && !error && (
           <Alert severity="info">
-            Enter a scene ID to preview and select for processing.
+            Enter a video ID to preview and select for processing.
           </Alert>
         )}
 

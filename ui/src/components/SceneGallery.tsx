@@ -19,7 +19,7 @@ import {
 import { Search as SearchIcon, PlayArrow as PlayIcon } from '@mui/icons-material';
 
 interface Scene {
-  id: string;
+  video_id: string;
   title: string;
   screenshot: string;
   duration: number;
@@ -56,7 +56,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
   const [page, setPage] = useState(1);
   const [totalScenes, setTotalScenes] = useState(0);
   
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
   
   // Update selectedIds when selectedSceneIds prop changes
   React.useEffect(() => {
@@ -68,13 +68,13 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
       try {
         setLoading(true);
         const offset = (page - 1) * limit;
-        const response = await fetch(`${apiUrl}/scenes?limit=${limit}&offset=${offset}`);
+        const response = await fetch(`${apiUrl}/videos?limit=${limit}&offset=${offset}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch scenes');
+          throw new Error('Failed to fetch videos');
         }
         const data = await response.json();
-        setScenes(data.scenes || []);
-        setTotalScenes(data.total || data.scenes?.length || 0);
+        setScenes(data.videos || []);
+        setTotalScenes(data.total || data.videos?.length || 0);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -94,7 +94,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
 
   const filteredScenes = scenes.filter((scene) =>
     scene.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    scene.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    (scene.tags || []).some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
   
   const handleSceneClick = (sceneId: string) => {
@@ -137,14 +137,14 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        Error loading scenes: {error}
+        Error loading videos: {error}
       </Alert>
     );
   }
 
   const handleSelectAll = () => {
     if (multiSelect && onMultiSelect) {
-      const allSceneIds = filteredScenes.map(s => s.id);
+      const allSceneIds = filteredScenes.map(s => s.video_id);
       setSelectedIds(new Set(allSceneIds));
       onMultiSelect(allSceneIds);
       if (onSelectAll) {
@@ -159,7 +159,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Search scenes by title or tags..."
+          placeholder="Search videos by title or tags..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -183,16 +183,16 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
       </Box>
 
       {filteredScenes.length === 0 ? (
-        <Alert severity="info">No scenes found</Alert>
+        <Alert severity="info">No videos found</Alert>
       ) : (
         <Grid container spacing={2}>
           {filteredScenes.map((scene) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={scene.id}>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={scene.video_id}>
               <Card
                 sx={{
                   cursor: 'pointer',
                   position: 'relative',
-                  border: (multiSelect ? selectedIds.has(scene.id) : selectedSceneId === scene.id) ? '3px solid #1976d2' : '1px solid #333',
+                  border: (multiSelect ? selectedIds.has(scene.video_id) : selectedSceneId === scene.video_id) ? '3px solid #1976d2' : '1px solid #333',
                   transition: 'all 0.2s',
                   '&:hover': {
                     transform: 'translateY(-4px)',
@@ -202,13 +202,13 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                     },
                   },
                 }}
-                onClick={() => handleSceneClick(scene.id)}
+                onClick={() => handleSceneClick(scene.video_id)}
               >
                 <Box position="relative">
                   {multiSelect && (
                     <Checkbox
-                      checked={selectedIds.has(scene.id)}
-                      onClick={(e) => handleCheckboxClick(e, scene.id)}
+                      checked={selectedIds.has(scene.video_id)}
+                      onClick={(e) => handleCheckboxClick(e, scene.video_id)}
                       sx={{
                         position: 'absolute',
                         top: 8,
@@ -251,6 +251,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                   )}
                   
                   {/* Duration badge */}
+                  {scene.duration > 0 && (
                   <Chip
                     label={formatDuration(scene.duration)}
                     size="small"
@@ -263,6 +264,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                       fontWeight: 'bold',
                     }}
                   />
+                  )}
                 </Box>
 
                 <CardContent sx={{ pb: 1 }}>
@@ -280,7 +282,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                       variant="caption"
                       color="text.secondary"
                     >
-                      Scene ID: {scene.id}
+                      Video ID: {scene.video_id}
                     </Typography>
                     {scene.is_processed && showProcessed && (
                       <Chip
@@ -291,7 +293,7 @@ const SceneGallery: React.FC<SceneGalleryProps> = ({
                     )}
                   </Stack>
 
-                  {scene.tags.length > 0 && (
+                  {(scene.tags || []).length > 0 && (
                     <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5} sx={{ mt: 0.5 }}>
                       <Chip
                         label={`${scene.tags.length} tag${scene.tags.length !== 1 ? 's' : ''}`}

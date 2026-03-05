@@ -36,7 +36,7 @@ This starts 7 services:
 | Service | Port | Purpose |
 |---|---|---|
 | **UI** | [localhost:3001](http://localhost:3001) | React frontend |
-| **API** | [localhost:8888](http://localhost:8888) | FastAPI backend |
+| **API** | [localhost:9898](http://localhost:9898) | FastAPI backend |
 | **PostgreSQL** | 5432 | Database + pgvector |
 | **Redis** | 7200 | Celery message broker |
 | **sampler-worker** | — | Frame extraction (FFmpeg) |
@@ -60,18 +60,18 @@ Open the UI at **http://localhost:3001**.
 
 ```bash
 # Health check
-curl http://localhost:8888/health
+curl http://localhost:9898/health
 
 # Ingest a video
-curl -X POST http://localhost:8888/ingest \
+curl -X POST http://localhost:9898/ingest \
   -H "Content-Type: application/json" \
   -d '{"scene_id": "vid001", "title": "Pasta Recipe", "path": "pasta-recipe.mp4"}'
 
 # List jobs
-curl http://localhost:8888/jobs
+curl http://localhost:9898/jobs
 
 # List suggestions
-curl http://localhost:8888/suggestions
+curl http://localhost:9898/suggestions
 ```
 
 ## 5. Customize tags

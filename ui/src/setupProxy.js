@@ -17,7 +17,7 @@ module.exports = function(app) {
   // When running in Docker, localhost refers to the container itself, not the host
   // So we need to use the Docker service name to reach other containers
   if (!target || target === '' || 
-      target === 'http://localhost:8080' || target === 'http://localhost:8888' ||
+      target === 'http://localhost:8080' || target === 'http://localhost:9898' ||
       target.startsWith('http://localhost:')) {
     // In Docker, use service name. Service name resolution works within Docker network
     // The API container runs on port 8080 internally

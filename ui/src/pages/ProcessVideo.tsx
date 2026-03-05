@@ -44,7 +44,7 @@ const ProcessVideo: React.FC = () => {
   const [cancellingAll, setCancellingAll] = useState(false);
   const [cleanProcess, setCleanProcess] = useState(false);
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8888';
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:9898';
   
   // Load default settings
   useEffect(() => {
@@ -100,7 +100,7 @@ const ProcessVideo: React.FC = () => {
     const scenesToProcess = multiSelect ? selectedSceneIds : (sceneId ? [sceneId] : []);
     
     if (scenesToProcess.length === 0) {
-      setError('Please select at least one scene from the gallery');
+      setError('Please select at least one video from the gallery');
       return;
     }
 
@@ -117,7 +117,7 @@ const ProcessVideo: React.FC = () => {
       
       // Add job options if set
       if (maxFrames !== null && maxFrames > 0) {
-        jobOptions.max_frames_per_scene = maxFrames;
+        jobOptions.max_frames = maxFrames;
       }
       if (sampleFps !== null && sampleFps > 0) {
         jobOptions.sample_fps = sampleFps;
@@ -131,7 +131,7 @@ const ProcessVideo: React.FC = () => {
       
       const jobPromises = scenesToProcess.map(sceneId =>
         axios.post(`${apiUrl}/ingest`, {
-          scene_id: sceneId,
+          video_id: sceneId,
           ...jobOptions
         })
       );
@@ -139,7 +139,7 @@ const ProcessVideo: React.FC = () => {
       const responses = await Promise.all(jobPromises);
       const newJobIds = responses.map(r => r.data.job_id);
       
-      setSuccess(`Processing started for ${scenesToProcess.length} scene(s)!`);
+      setSuccess(`Processing started for ${scenesToProcess.length} video(s)!`);
       
       // Add to active jobs list
       setActiveJobs(prev => [...prev, ...newJobIds]);
@@ -265,7 +265,7 @@ const ProcessVideo: React.FC = () => {
               {multiSelect ? (
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Typography variant="body2" color="text.secondary">
-                    {selectedSceneIds.length > 0 ? `${selectedSceneIds.length} scene(s) selected` : 'Select scenes from the gallery below'}
+                    {selectedSceneIds.length > 0 ? `${selectedSceneIds.length} video(s) selected` : 'Select videos from the gallery below'}
                   </Typography>
                   {selectedSceneIds.length > 0 && (
                     <Chip label={`${selectedSceneIds.length} selected`} size="small" color="primary" />
@@ -273,7 +273,7 @@ const ProcessVideo: React.FC = () => {
                 </Box>
               ) : (
             <Typography variant="body2" color="text.secondary">
-              {sceneId ? `Selected Scene: ${sceneId}` : 'Select a scene from the gallery below'}
+              {sceneId ? `Selected Video: ${sceneId}` : 'Select a video from the gallery below'}
             </Typography>
               )}
             </Box>
@@ -284,7 +284,7 @@ const ProcessVideo: React.FC = () => {
               size="large"
               startIcon={loading ? <CircularProgress size={20} /> : <PlayArrow />}
             >
-              {loading ? 'Starting...' : multiSelect ? `Process ${selectedSceneIds.length || 0} Scene(s)` : 'Process Selected Scene'}
+              {loading ? 'Starting...' : multiSelect ? `Process ${selectedSceneIds.length || 0} Video(s)` : 'Process Selected Video'}
             </Button>
           </Box>
 
@@ -304,11 +304,11 @@ const ProcessVideo: React.FC = () => {
                       onChange={(e) => setCleanProcess(e.target.checked)}
                     />
                   }
-                  label="Clean Process (delete all old jobs for scene before processing)"
+                  label="Clean Process (delete all old jobs for video before processing)"
                 />
                 <TextField
                   type="number"
-                  label="Max Frames Per Scene"
+                  label="Max Frames Per Video"
                   value={maxFrames || ''}
                   onChange={(e) => setMaxFrames(e.target.value ? parseInt(e.target.value) : null)}
                   helperText="Maximum number of frames to extract and analyze (leave empty to use default from settings)"
@@ -389,10 +389,10 @@ const ProcessVideo: React.FC = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Select Scene from Library
+            Select Video from Library
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Browse your recent scenes and click to select one for processing
+            Browse your recent videos and click to select one for processing
           </Typography>
           <SceneGallery
             onSceneSelect={handleSelectScene}

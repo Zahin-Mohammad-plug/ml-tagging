@@ -24,7 +24,7 @@ import tempfile
 import numpy as np
 
 from .config import get_settings, Settings
-from .database import init_db, get_database, frame_samples_table, async_session_maker, jobs_table, suggestions_table
+from .database import init_db, get_database, frame_samples_table, async_session_maker, jobs_table, suggestions_table, scenes_table
 from .models import (
     HealthResponse, 
     IngestRequest, 
@@ -237,6 +237,86 @@ async def health_check(db: AsyncSession = Depends(get_database)):
         queue="unknown",  # Will implement Redis check
     )
 
+@app.get("/videos")
+async def list_videos(
+    limit: int = 20,
+    offset: int = 0,
+    # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
+):
+    """
+    List videos with pagination.
+    
+    Returns videos from the scenes table, mapped to public video_id terminology.
+    """
+    try:
+        async with async_session_maker() as session:
+            # Get total count
+            count_query = sa.select(sa.func.count()).select_from(scenes_table)
+            count_result = await session.execute(count_query)
+            total = count_result.scalar() or 0
+
+            # Get videos
+            query = (
+                sa.select(scenes_table)
+                .order_by(scenes_table.c.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            result = await session.execute(query)
+            rows = result.mappings().all()
+
+            videos = []
+            for row in rows:
+                videos.append({
+                    "video_id": row["scene_id"],
+                    "title": row.get("title") or f"Video {row['scene_id']}",
+                    "created_at": row.get("created_at"),
+                    "file_path": row.get("file_path"),
+                })
+
+            return {
+                "videos": videos,
+                "total": total,
+                "limit": limit,
+                "offset": offset,
+            }
+
+    except Exception as e:
+        logger.error("Failed to list videos", error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/videos/{video_id}")
+async def get_video(
+    video_id: str,
+    # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
+):
+    """
+    Get a single video by ID.
+    """
+    try:
+        async with async_session_maker() as session:
+            query = sa.select(scenes_table).where(scenes_table.c.scene_id == video_id)
+            result = await session.execute(query)
+            row = result.mappings().first()
+
+            if not row:
+                raise HTTPException(status_code=404, detail=f"Video {video_id} not found")
+
+            return {
+                "video_id": row["scene_id"],
+                "title": row.get("title") or f"Video {row['scene_id']}",
+                "created_at": row.get("created_at"),
+                "file_path": row.get("file_path"),
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to get video", video_id=video_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @app.post("/ingest", response_model=IngestResponse)
 async def ingest_scene(
     request: IngestRequest,
@@ -252,30 +332,31 @@ async def ingest_scene(
     2. Creates a processing job
     3. Queues background workers for sampling, embeddings, ASR/OCR, and fusion
     """
-    logger.info("Ingesting video for processing", scene_id=request.scene_id)
+    # Map video_id to internal scene_id
+    scene_id = request.video_id
+    logger.info("Ingesting video for processing", scene_id=scene_id)
     
     try:
         # Create scene record in database if it doesn't exist
-        from .database import scenes_table, async_session_maker
         async with async_session_maker() as session:
             try:
                 # Check if scene exists
-                check_query = sa.select(scenes_table).where(scenes_table.c.scene_id == request.scene_id)
+                check_query = sa.select(scenes_table).where(scenes_table.c.scene_id == scene_id)
                 result = await session.execute(check_query)
                 existing_scene = result.first()
                 
                 if not existing_scene:
                     # Insert scene record from request data
                     insert_query = scenes_table.insert().values(
-                        scene_id=request.scene_id,
-                        title=request.title or f"Video {request.scene_id}",
+                        scene_id=scene_id,
+                        title=request.title or f"Video {scene_id}",
                         path=request.path,
                         duration_seconds=request.duration,
                         frame_rate=request.frame_rate
                     )
                     await session.execute(insert_query)
                     await session.commit()
-                    logger.info("Created scene record", scene_id=request.scene_id)
+                    logger.info("Created scene record", scene_id=scene_id)
             except Exception as e:
                 await session.rollback()
                 logger.warning("Failed to create scene record", error=str(e))
@@ -283,40 +364,39 @@ async def ingest_scene(
         
         # Handle clean_process: delete all old jobs for this scene
         if request.clean_process:
-            from .database import jobs_table
             async with async_session_maker() as session:
                 try:
                     delete_query = sa.delete(jobs_table).where(
-                        jobs_table.c.scene_id == request.scene_id
+                        jobs_table.c.scene_id == scene_id
                     )
                     result = await session.execute(delete_query)
                     await session.commit()
                     deleted_count = result.rowcount
                     logger.info(
                         "Deleted old jobs for clean process",
-                        scene_id=request.scene_id,
+                        scene_id=scene_id,
                         deleted_count=deleted_count
                     )
                 except Exception as e:
                     await session.rollback()
-                    logger.warning("Failed to delete old jobs", scene_id=request.scene_id, error=str(e))
+                    logger.warning("Failed to delete old jobs", scene_id=scene_id, error=str(e))
                     # Continue anyway - might be no jobs to delete
         
         # Check if already processing or recently processed (after clean_process)
-        existing_job = await orchestrator.get_active_job(request.scene_id)
+        existing_job = await orchestrator.get_active_job(scene_id)
         if existing_job:
             return IngestResponse(
                 job_id=existing_job.job_id,
                 status="already_processing",
-                message=f"Scene {request.scene_id} is already being processed"
+                message=f"Video {scene_id} is already being processed"
             )
         
         # Create and queue processing job
         job = await orchestrator.create_job(
-            scene_id=request.scene_id,
+            scene_id=scene_id,
             priority=request.priority,
             force_reprocess=request.force_reprocess,
-            max_frames_per_scene=request.max_frames_per_scene,
+            max_frames_per_scene=request.max_frames,
             sample_fps=request.sample_fps,
             auto_approve_threshold=request.auto_approve_threshold,
             auto_delete_threshold=request.auto_delete_threshold,
@@ -335,7 +415,7 @@ async def ingest_scene(
             logger.info(
                 "Job queued (at concurrency limit)",
                 job_id=job.job_id,
-                scene_id=request.scene_id,
+                scene_id=scene_id,
                 max_concurrent=orchestrator.MAX_CONCURRENT_JOBS
             )
             # Try to start queued jobs in background (in case other jobs just completed)
@@ -343,18 +423,18 @@ async def ingest_scene(
                 orchestrator.start_next_queued_job,
             )
         
-        logger.info("Video processing job created", job_id=job.job_id, scene_id=request.scene_id)
+        logger.info("Video processing job created", job_id=job.job_id, scene_id=scene_id)
         
         return IngestResponse(
             job_id=job.job_id,
             status="queued",
-            message=f"Processing started for video {request.scene_id}"
+            message=f"Processing started for video {scene_id}"
         )
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to ingest video", scene_id=request.scene_id, error=str(e))
+        logger.error("Failed to ingest video", scene_id=scene_id, error=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/jobs/active")
@@ -386,7 +466,7 @@ async def get_active_jobs(
             "jobs": [
                 {
                     "job_id": job.job_id,
-                    "scene_id": job.scene_id,
+                    "video_id": job.scene_id,
                     "status": job.status.value,
                     "priority": job.priority.value if job.priority else "normal",
                     "created_at": job.created_at.isoformat() if job.created_at else None,
@@ -473,7 +553,7 @@ async def get_job_status(
         
         return {
             "job_id": job.job_id,
-            "scene_id": job.scene_id,
+            "video_id": job.scene_id,
             "status": job.status.value,
             "progress": job.progress,
             "created_at": job.created_at.isoformat() if job.created_at else None,
@@ -544,7 +624,7 @@ async def list_jobs(
             "jobs": [
                 {
                     "job_id": job.job_id,
-                    "scene_id": job.scene_id,
+                    "video_id": job.scene_id,
                     "status": job.status.value,
                     "progress": job.progress,
                     "created_at": job.created_at.isoformat() if job.created_at else None,
@@ -559,7 +639,7 @@ async def list_jobs(
 @app.get("/suggestions", response_model=List[SuggestionResponse])
 async def get_suggestions(
     status: Optional[SuggestionStatus] = None,
-    scene_id: Optional[str] = None,
+    video_id: Optional[str] = None,
     min_confidence: Optional[float] = None,
     limit: int = 50,
     offset: int = 0,
@@ -575,17 +655,17 @@ async def get_suggestions(
     
     Args:
         status: Filter by suggestion status (pending, approved, rejected)
-        scene_id: Filter by scene ID
+        video_id: Filter by video ID
         min_confidence: Minimum confidence threshold (0.0 to 1.0)
         limit: Maximum number of suggestions to return
         offset: Number of suggestions to skip
-        sort_by: Sort field (confidence, date, scene)
+        sort_by: Sort field (confidence, date, video)
         sort_order: Sort order (asc, desc) - defaults to desc
     """
     try:
         suggestions = await suggestion_service.get_suggestions(
             status=status,
-            scene_id=scene_id,
+            scene_id=video_id,
             min_confidence=min_confidence,
             limit=limit,
             offset=offset,
@@ -600,9 +680,9 @@ async def get_suggestions(
         logger.error("Failed to fetch suggestions", error=str(e), error_type=type(e).__name__, traceback=traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.post("/suggestions/text-based/{scene_id}", response_model=TextBasedSuggestionsResponse)
+@app.post("/suggestions/text-based/{video_id}", response_model=TextBasedSuggestionsResponse)
 async def get_text_based_suggestions(
-    scene_id: str,
+    video_id: str,
     request: TextBasedSuggestionsRequest = Body(...),
     text_suggester: TextTagSuggester = Depends(get_text_tag_suggester),
     # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
@@ -622,14 +702,13 @@ async def get_text_based_suggestions(
     """
     try:
         # Get scene from database
-        from .database import scenes_table, async_session_maker
         async with async_session_maker() as session:
-            scene_query = sa.select(scenes_table).where(scenes_table.c.scene_id == scene_id)
+            scene_query = sa.select(scenes_table).where(scenes_table.c.scene_id == video_id)
             result = await session.execute(scene_query)
             scene_row = result.first()
         
         if not scene_row:
-            raise HTTPException(status_code=404, detail=f"Scene {scene_id} not found")
+            raise HTTPException(status_code=404, detail=f"Video {video_id} not found")
         
         # Build a simple scene object for the text suggester
         class SceneData:
@@ -666,7 +745,6 @@ async def get_text_based_suggestions(
         ]
         
         # Get total tags checked (approximate - we checked all active tags with embeddings)
-        from .database import async_session_maker, tags_table
         async with async_session_maker() as session:
             count_query = sa.select(sa.func.count()).select_from(tags_table).where(
                 tags_table.c.is_active == True,
@@ -676,7 +754,7 @@ async def get_text_based_suggestions(
             total_tags_checked = result.scalar() or 0
         
         return TextBasedSuggestionsResponse(
-            scene_id=scene_id,
+            video_id=video_id,
             suggestions=suggestion_responses,
             text_used={
                 "description": request.use_description and bool(scene.description),
@@ -689,23 +767,20 @@ async def get_text_based_suggestions(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to generate text-based suggestions", scene_id=scene_id, error=str(e), exc_info=True)
+        logger.error("Failed to generate text-based suggestions", video_id=video_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/suggestions/scenes")
-async def get_scenes_with_suggestions(
+@app.get("/suggestions/videos")
+async def get_videos_with_suggestions(
     suggestion_service: SuggestionService = Depends(get_suggestion_service),
     # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
 ):
     """
-    Get list of unique scenes that have suggestions, with scene titles
-    Useful for populating scene filter dropdowns
+    Get list of unique videos that have suggestions, with video titles
+    Useful for populating video filter dropdowns
     """
     try:
         # Get unique scene IDs from suggestions
-        from .database import async_session_maker, suggestions_table, scenes_table
-        import sqlalchemy as sa
-        
         async with async_session_maker() as session:
             # Get distinct scene IDs from suggestions
             scene_ids_query = sa.select(
@@ -714,13 +789,12 @@ async def get_scenes_with_suggestions(
             result = await session.execute(scene_ids_query)
             scene_ids = [row[0] for row in result.fetchall()]
             
-            logger.info("Found scenes with suggestions", scene_count=len(scene_ids), scene_ids=scene_ids[:10])  # Log first 10
+            logger.info("Found videos with suggestions", video_count=len(scene_ids), video_ids=scene_ids[:10])
             
-            # Get scene titles from scenes table
-            scenes_with_titles = []
+            # Get video titles from scenes table
+            videos_with_titles = []
             for scene_id in scene_ids:
                 try:
-                    # Try to get title from scenes table first
                     scene_query = sa.select(scenes_table.c.title).where(
                         scenes_table.c.scene_id == scene_id
                     )
@@ -729,25 +803,25 @@ async def get_scenes_with_suggestions(
                     
                     title = scene_row[0] if scene_row and scene_row[0] else None
                     
-                    scenes_with_titles.append({
-                        "scene_id": scene_id,
-                        "title": title or f"Scene {scene_id}"
+                    videos_with_titles.append({
+                        "video_id": scene_id,
+                        "title": title or f"Video {scene_id}"
                     })
                 except Exception as e:
-                    logger.warning("Failed to get scene title", scene_id=scene_id, error=str(e))
-                    scenes_with_titles.append({
-                        "scene_id": scene_id,
-                        "title": f"Scene {scene_id}"
+                    logger.warning("Failed to get video title", video_id=scene_id, error=str(e))
+                    videos_with_titles.append({
+                        "video_id": scene_id,
+                        "title": f"Video {scene_id}"
                     })
             
-            # Sort by scene_id (numeric if possible)
-            scenes_with_titles.sort(key=lambda x: (
-                int(x["scene_id"]) if x["scene_id"].isdigit() else float('inf'),
-                x["scene_id"]
+            # Sort by video_id (numeric if possible)
+            videos_with_titles.sort(key=lambda x: (
+                int(x["video_id"]) if x["video_id"].isdigit() else float('inf'),
+                x["video_id"]
             ))
             
-            logger.info("Returning scenes with suggestions", count=len(scenes_with_titles))
-            return scenes_with_titles
+            logger.info("Returning videos with suggestions", count=len(videos_with_titles))
+            return videos_with_titles
             
     except Exception as e:
         logger.error("Failed to fetch scenes with suggestions", error=str(e), exc_info=True)
@@ -955,19 +1029,19 @@ async def delete_all_suggestions(
         logger.error("Failed to delete all suggestions", error=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.delete("/scenes/{scene_id}/suggestions")
-async def delete_suggestions_for_scene(
-    scene_id: str,
+@app.delete("/videos/{video_id}/suggestions")
+async def delete_suggestions_for_video(
+    video_id: str,
     # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
 ):
     """
-    Delete all suggestions and jobs for a specific scene
+    Delete all suggestions and jobs for a specific video
     
     This will:
-    1. Delete all jobs for the scene (cascades to frames, embeddings, text_analysis)
-    2. Delete all suggestions for the scene (cascades to audit_log)
+    1. Delete all jobs for the video (cascades to frames, embeddings, text_analysis)
+    2. Delete all suggestions for the video (cascades to audit_log)
     
-    Useful for reprocessing a scene with fresh analysis.
+    Useful for reprocessing a video with fresh analysis.
     """
     try:
         async with async_session_maker() as session:
@@ -975,79 +1049,79 @@ async def delete_suggestions_for_scene(
             jobs_count = await session.execute(
                 sa.select(sa.func.count())
                 .select_from(jobs_table)
-                .where(jobs_table.c.scene_id == scene_id)
+                .where(jobs_table.c.scene_id == video_id)
             )
             jobs_total = jobs_count.scalar() or 0
             
             suggestions_count = await session.execute(
                 sa.select(sa.func.count())
                 .select_from(suggestions_table)
-                .where(suggestions_table.c.scene_id == scene_id)
+                .where(suggestions_table.c.scene_id == video_id)
             )
             suggestions_total = suggestions_count.scalar() or 0
             
             if jobs_total == 0:
                 return {
                     "status": "success",
-                    "message": f"No jobs or suggestions found for scene {scene_id}",
+                    "message": f"No jobs or suggestions found for video {video_id}",
                     "jobs_deleted": 0,
                     "suggestions_deleted": 0
                 }
             
-            # Delete jobs for this scene (cascade will handle related data)
+            # Delete jobs for this video (cascade will handle related data)
             await session.execute(
-                sa.delete(jobs_table).where(jobs_table.c.scene_id == scene_id)
+                sa.delete(jobs_table).where(jobs_table.c.scene_id == video_id)
             )
             
             await session.commit()
             
             logger.info(
-                "Deleted suggestions and jobs for scene",
-                scene_id=scene_id,
+                "Deleted suggestions and jobs for video",
+                video_id=video_id,
                 jobs_deleted=jobs_total,
                 suggestions_deleted=suggestions_total
             )
             
             return {
                 "status": "success",
-                "message": f"Deleted {jobs_total} jobs and {suggestions_total} suggestions for scene {scene_id}",
+                "message": f"Deleted {jobs_total} jobs and {suggestions_total} suggestions for video {video_id}",
                 "jobs_deleted": jobs_total,
                 "suggestions_deleted": suggestions_total
             }
         
     except Exception as e:
-        logger.error("Failed to delete suggestions for scene", scene_id=scene_id, error=str(e))
+        logger.error("Failed to delete suggestions for video", video_id=video_id, error=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/scenes/{scene_id}/reprocess")
-async def reprocess_scene(
-    scene_id: str,
+@app.post("/videos/{video_id}/reprocess")
+async def reprocess_video(
+    video_id: str,
     background_tasks: BackgroundTasks,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
     # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
 ):
     """
-    Reprocess a scene by deleting old suggestions and creating a new job
+    Reprocess a video by deleting old suggestions and creating a new job
     
     This will:
-    1. Delete all existing jobs and suggestions for the scene
-    2. Create a new ingest job for the scene
+    1. Delete all existing jobs and suggestions for the video
+    2. Create a new ingest job for the video
     3. Return the new job ID
     """
     try:
         # First, delete existing suggestions and jobs
         async with async_session_maker() as session:
-            # Delete jobs for this scene (cascade will handle related data)
+            # Delete jobs for this video (cascade will handle related data)
             await session.execute(
-                sa.delete(jobs_table).where(jobs_table.c.scene_id == scene_id)
+                sa.delete(jobs_table).where(jobs_table.c.scene_id == video_id)
             )
             await session.commit()
         
-        logger.info("Deleted old jobs and suggestions for scene", scene_id=scene_id)
+        logger.info("Deleted old jobs and suggestions for video", video_id=video_id)
         
         # Create new job with force_reprocess flag
         job = await orchestrator.create_job(
-            scene_id=scene_id,
+            scene_id=video_id,
             priority="normal",
             force_reprocess=True
         )
@@ -1065,7 +1139,7 @@ async def reprocess_scene(
             logger.info(
                 "Reprocess job queued (at concurrency limit)",
                 job_id=job.job_id,
-                scene_id=scene_id,
+                video_id=video_id,
                 max_concurrent=orchestrator.MAX_CONCURRENT_JOBS
             )
             # Try to start queued jobs in background
@@ -1074,23 +1148,23 @@ async def reprocess_scene(
             )
         
         logger.info(
-            "Reprocessing scene",
-            scene_id=scene_id,
+            "Reprocessing video",
+            video_id=video_id,
             job_id=job.job_id
         )
         
         return {
             "status": "success",
-            "message": f"Scene {scene_id} is being reprocessed",
+            "message": f"Video {video_id} is being reprocessed",
             "job_id": job.job_id,
-            "scene_id": scene_id
+            "video_id": video_id
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to reprocess scene", scene_id=scene_id, error=str(e), exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to reprocess scene: {str(e)}")
+        logger.error("Failed to reprocess video", video_id=video_id, error=str(e), exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to reprocess video: {str(e)}")
 
 @app.post("/jobs/reset-stuck")
 async def reset_stuck_jobs(

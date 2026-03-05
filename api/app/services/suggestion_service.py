@@ -114,7 +114,7 @@ class SuggestionService:
                 sort_column = suggestions_table.c.confidence
             elif sort_by == "date" or sort_by == "created_at":
                 sort_column = suggestions_table.c.created_at
-            elif sort_by == "scene" or sort_by == "scene_id":
+            elif sort_by in ("video", "video_id", "scene", "scene_id"):
                 sort_column = suggestions_table.c.scene_id
             
             # Check if sort_column is not None (can't use SQLAlchemy column in boolean context)
@@ -446,8 +446,8 @@ class SuggestionService:
 
         return SuggestionResponse(
             id=suggestion["id"],
-            scene_id=suggestion["scene_id"],
-            scene_title=scene_title,
+            video_id=suggestion["scene_id"],
+            video_title=scene_title,
             tag_context=tag_context,
             confidence=suggestion["confidence"],
             confidence_breakdown=confidence_breakdown,

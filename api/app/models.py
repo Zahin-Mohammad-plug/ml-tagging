@@ -37,17 +37,17 @@ class HealthResponse(BaseModel):
 
 # Ingest Models
 class IngestRequest(BaseModel):
-    scene_id: str = Field(..., description="Video ID to process")
+    video_id: str = Field(..., description="Video ID to process")
     priority: JobPriority = Field(default=JobPriority.NORMAL, description="Processing priority")
     force_reprocess: bool = Field(default=False, description="Force reprocessing even if recently processed")
-    clean_process: bool = Field(default=False, description="Delete all old jobs for scene before processing")
-    # Video metadata (optional, for creating scene record)
+    clean_process: bool = Field(default=False, description="Delete all old jobs for video before processing")
+    # Video metadata (optional, for creating video record)
     title: Optional[str] = Field(None, description="Video title")
     path: Optional[str] = Field(None, description="Path to video file")
     duration: Optional[float] = Field(None, description="Video duration in seconds")
     frame_rate: Optional[float] = Field(None, description="Video frame rate")
     # Job options
-    max_frames_per_scene: Optional[int] = Field(None, description="Maximum number of frames to process (overrides settings)")
+    max_frames: Optional[int] = Field(None, description="Maximum number of frames to process (overrides settings)")
     auto_approve_threshold: Optional[float] = Field(None, description="Auto-approve suggestions above this confidence (0.0-1.0)")
     auto_delete_threshold: Optional[float] = Field(None, description="Auto-delete suggestions below this confidence (0.0-1.0)")
     sample_fps: Optional[float] = Field(None, description="Frames per second to sample (overrides settings)")
@@ -83,7 +83,7 @@ class TagContext(BaseModel):
 # Suggestion Models
 class Suggestion(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique suggestion ID")
-    scene_id: str = Field(..., description="Scene ID")
+    video_id: str = Field(..., description="Video ID")
     tag_name: str = Field(..., description="Suggested tag name")
     confidence: float = Field(..., description="Overall confidence score")
     status: SuggestionStatus = Field(default=SuggestionStatus.PENDING, description="Suggestion status")
@@ -92,8 +92,8 @@ class Suggestion(BaseModel):
 class SuggestionResponse(BaseModel):
     """Full suggestion details with evidence"""
     id: str
-    scene_id: str
-    scene_title: Optional[str] = Field(None, description="Scene title")
+    video_id: str
+    video_title: Optional[str] = Field(None, description="Video title")
     tag_context: TagContext
     confidence: float
     confidence_breakdown: ConfidenceBreakdown
@@ -127,7 +127,7 @@ class TextBasedSuggestion(BaseModel):
     text_type: Optional[str] = Field(None, description="Type of text used (description, title, ocr)")
 
 class TextBasedSuggestionsResponse(BaseModel):
-    scene_id: str = Field(..., description="Scene ID")
+    video_id: str = Field(..., description="Video ID")
     suggestions: List[TextBasedSuggestion] = Field(..., description="List of tag suggestions")
     text_used: Dict[str, bool] = Field(..., description="Which text sources were used")
     total_tags_checked: int = Field(..., description="Total number of tags checked")
@@ -135,7 +135,7 @@ class TextBasedSuggestionsResponse(BaseModel):
 # Job Models
 class Job(BaseModel):
     job_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    scene_id: str
+    video_id: str
     status: JobStatus = Field(default=JobStatus.QUEUED)
     priority: JobPriority = Field(default=JobPriority.NORMAL)
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -147,7 +147,7 @@ class Job(BaseModel):
 class JobResponse(BaseModel):
     """Job details with progress information"""
     job_id: str
-    scene_id: str
+    video_id: str
     status: JobStatus
     priority: JobPriority
     created_at: datetime
