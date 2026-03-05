@@ -1,0 +1,529 @@
+{
+  "Grilling": [
+    "a person grilling food on a barbecue",
+    "meat being cooked on an open flame grill",
+    "outdoor grilling with charcoal or gas",
+    "grill marks on food being prepared"
+  ],
+  "Baking": [
+    "baking bread or pastry in an oven",
+    "a person mixing dough for baking",
+    "freshly baked goods cooling on a rack",
+    "preparing a cake or pie for the oven"
+  ],
+  "Sauteing": [
+    "sauteing vegetables in a pan with oil",
+    "food being tossed in a hot skillet",
+    "a chef stirring ingredients in a saute pan"
+  ],
+  "Chopping": [
+    "a person chopping vegetables on a cutting board",
+    "knife skills demonstration with fresh produce",
+    "dicing onions or herbs with a chef knife"
+  ],
+  "Boiling": [
+    "water boiling in a large pot on the stove",
+    "pasta or noodles cooking in boiling water",
+    "blanching vegetables in a pot of boiling water"
+  ],
+  "Frying": [
+    "deep frying food in hot oil",
+    "pan frying with a shallow layer of oil",
+    "crispy fried food being removed from oil"
+  ],
+  "Plating": [
+    "beautifully plated dish on a white plate",
+    "garnishing a finished dish for presentation",
+    "chef arranging food artfully on a plate"
+  ],
+  "Kneading": [
+    "kneading bread dough on a floured surface",
+    "hands working dough for pizza or bread",
+    "stretching and folding dough by hand"
+  ],
+  "Whisking": [
+    "whisking eggs or cream in a bowl",
+    "using a whisk to mix batter",
+    "vigorously whisking a sauce until smooth"
+  ],
+  "Roasting": [
+    "roasting a whole chicken or turkey in the oven",
+    "vegetables roasting on a sheet pan",
+    "golden brown roasted food coming out of the oven"
+  ],
+  "Steaming": [
+    "steaming dumplings in a bamboo steamer",
+    "vegetables being steamed over boiling water",
+    "steam rising from a pot of food"
+  ],
+  "Marinating": [
+    "meat marinating in a bowl with spices",
+    "preparing a marinade with herbs and oil",
+    "food soaking in a flavorful liquid mixture"
+  ],
+  "Stir Fry": [
+    "stir frying vegetables and protein in a wok",
+    "high heat wok cooking with tossing motion",
+    "Asian style stir fry with sauce"
+  ],
+  "Soup Making": [
+    "simmering a pot of soup on the stove",
+    "adding ingredients to a large soup pot",
+    "blending soup with an immersion blender"
+  ],
+  "Salad Preparation": [
+    "tossing a fresh salad in a large bowl",
+    "mixing salad dressing with greens",
+    "assembling a colorful salad with various ingredients"
+  ],
+  "Pasta Making": [
+    "rolling fresh pasta dough with a machine",
+    "cutting homemade noodles by hand",
+    "shaping fresh pasta like ravioli or tortellini"
+  ],
+  "Seasoning": [
+    "adding salt and pepper to a dish",
+    "sprinkling herbs and spices over food",
+    "tasting and adjusting seasonings while cooking"
+  ],
+  "Blending": [
+    "using a blender to make a smoothie or sauce",
+    "blending ingredients in a food processor",
+    "pureeing soup or sauce until smooth"
+  ],
+  "Kitchen Equipment": [
+    "professional kitchen with stainless steel equipment",
+    "cooking tools and utensils on a counter",
+    "a well-organized home kitchen setup"
+  ],
+  "Presentation": [
+    "a finished dish photographed from above",
+    "restaurant quality food presentation",
+    "multiple courses arranged on a dining table"
+  ],
+  "Mise en Place": [
+    "ingredients prepped and arranged in small bowls",
+    "organized cooking station with measured ingredients",
+    "preparation of all ingredients before cooking begins"
+  ],
+  "Dessert": [
+    "decorating a cake with frosting",
+    "plating a dessert with sauce drizzle",
+    "preparing a chocolate or fruit dessert"
+  ],
+  "Outdoor Cooking": [
+    "cooking over an open campfire",
+    "outdoor kitchen or patio cooking setup",
+    "smoking meat in a smoker outdoors"
+  ],
+  "Fermentation": [
+    "fermenting vegetables in mason jars",
+    "sourdough starter bubbling in a container",
+    "pickling or preserving food in brine"
+  ],
+  "Bread": [
+    "a freshly baked loaf of bread",
+    "scoring bread dough before baking",
+    "artisan bread with a crusty exterior"
+  ],
+  "Knife Sharpening": [
+    "sharpening a kitchen knife on a whetstone",
+    "a chef honing a knife with a honing rod",
+    "close up of a knife blade being sharpened"
+  ],
+  "Peeling": [
+    "peeling vegetables with a vegetable peeler",
+    "a person peeling potatoes over a sink",
+    "removing skin from carrots or apples with a peeler"
+  ],
+  "Cracking Eggs": [
+    "cracking eggs into a bowl for cooking",
+    "a chef cracking an egg on the edge of a bowl",
+    "raw eggs being added to a mixing bowl"
+  ],
+  "Measuring Ingredients": [
+    "measuring flour with measuring cups",
+    "pouring liquid into a measuring cup",
+    "precisely measuring baking ingredients on a scale"
+  ],
+  "Pouring Sauce": [
+    "pouring sauce over cooked food",
+    "drizzling sauce onto a plated dish",
+    "adding gravy or sauce from a ladle"
+  ],
+  "Tasting Food": [
+    "a chef tasting food with a spoon",
+    "checking seasoning by tasting a dish",
+    "cook sampling sauce during preparation"
+  ],
+  "Cleaning Up": [
+    "washing dishes in a kitchen sink",
+    "wiping down a kitchen counter after cooking",
+    "cleaning cookware and utensils after preparing food"
+  ],
+  "Food Storage": [
+    "storing leftovers in plastic containers",
+    "placing prepared food into refrigerator containers",
+    "covering food with plastic wrap for storage"
+  ],
+  "Cutting Meat": [
+    "slicing raw meat on a cutting board",
+    "a chef trimming fat from a piece of meat",
+    "cutting steak or chicken with a sharp knife"
+  ],
+  "Rolling Dough": [
+    "rolling dough with a wooden rolling pin",
+    "flattening pastry dough on a floured surface",
+    "rolling dough for cookies or pie crust"
+  ],
+  "Flipping Food": [
+    "flipping pancakes in a frying pan",
+    "turning food with a spatula while cooking",
+    "a chef flipping ingredients in a skillet"
+  ],
+  "Toasting": [
+    "bread slices toasting in a toaster",
+    "toasting bread on a skillet with butter",
+    "golden brown toast being removed from a toaster"
+  ],
+  "Carving": [
+    "carving a roasted turkey with a carving knife",
+    "slicing a roast on a carving board",
+    "cutting thin slices of cooked meat"
+  ],
+  "Sauce Preparation": [
+    "reducing sauce in a saucepan on the stove",
+    "stirring a simmering sauce in a pot",
+    "preparing a sauce with butter and herbs"
+  ],
+  "Food Photography": [
+    "photographing a plated dish with a camera",
+    "food styling setup with lighting and plates",
+    "taking a photo of food from above"
+  ],
+  "Serving Food": [
+    "serving food onto plates at a dining table",
+    "ladling soup into bowls for serving",
+    "placing dishes on the table for guests"
+  ],
+  "Grating": [
+    "grating cheese with a box grater",
+    "shredding vegetables using a kitchen grater",
+    "fine grated cheese falling onto a plate"
+  ],
+  "Zesting": [
+    "zesting lemon peel with a microplane",
+    "grating citrus zest over a dish",
+    "removing thin strips of lemon or orange peel"
+  ],
+  "Food Garnishing": [
+    "adding fresh herbs as garnish on a dish",
+    "placing garnish carefully on plated food",
+    "sprinkling chopped herbs over a finished meal"
+  ],
+  "Microwaving": [
+    "heating food in a microwave oven",
+    "placing a bowl of leftovers into the microwave",
+    "microwave door opening with steaming food inside"
+  ],
+  "Slicing": [
+    "slicing vegetables thinly with a chef knife",
+    "cutting tomatoes into even slices on a cutting board",
+    "precise slicing of ingredients for cooking"
+  ],
+  "Dicing": [
+    "dicing vegetables into small cubes",
+    "uniform diced onions on a cutting board",
+    "a chef quickly dicing ingredients with a knife"
+  ],
+  "Shredding": [
+    "shredding cooked chicken with two forks",
+    "pulling apart meat into thin strands",
+    "shredded vegetables prepared for cooking"
+  ],
+  "Mixing": [
+    "mixing ingredients together in a large bowl",
+    "stirring batter with a spoon in a bowl",
+    "combining ingredients for a recipe"
+  ],
+  "Folding Batter": [
+    "gently folding batter with a spatula",
+    "folding whipped cream into a mixture",
+    "carefully combining ingredients without overmixing"
+  ],
+  "Brushing": [
+    "brushing melted butter onto pastry",
+    "applying egg wash with a pastry brush",
+    "brushing sauce over meat while cooking"
+  ],
+  "Reducing Sauce": [
+    "simmering sauce until it thickens",
+    "reducing liquid in a saucepan on the stove",
+    "thick sauce bubbling gently in a pan"
+  ],
+  "Deglazing": [
+    "deglazing a pan with wine or broth",
+    "scraping browned bits from a pan with liquid",
+    "making a pan sauce after cooking meat"
+  ],
+  "Pressure Cooking": [
+    "using a pressure cooker on the stove",
+    "steam releasing from a pressure cooker valve",
+    "cooking food quickly in a sealed pressure cooker"
+  ],
+  "Slow Cooking": [
+    "food cooking slowly in a crockpot",
+    "lifting the lid of a slow cooker",
+    "ingredients simmering in a slow cooker pot"
+  ],
+  "Skewering": [
+    "threading meat and vegetables onto skewers",
+    "preparing kebabs on wooden sticks",
+    "placing skewered food onto a grill"
+  ],
+  "Stuffing": [
+    "stuffing vegetables with filling",
+    "filling pasta shells with cheese mixture",
+    "preparing stuffed peppers with ingredients"
+  ],
+  "Crushing": [
+    "crushing garlic cloves with a knife",
+    "using a garlic press to crush garlic",
+    "crushed spices on a cutting board"
+  ],
+  "Grinding": [
+    "grinding spices with a mortar and pestle",
+    "fresh pepper being ground over food",
+    "grinding ingredients into powder"
+  ],
+  "Tempering Chocolate": [
+    "melting chocolate gently over a double boiler",
+    "tempering chocolate on a marble surface",
+    "smooth melted chocolate being stirred"
+  ],
+  "Ice Cream Preparation": [
+    "pouring ice cream base into an ice cream maker",
+    "homemade ice cream churning in a machine",
+    "scooping freshly made ice cream"
+  ],
+  "Coffee Brewing": [
+    "pouring hot water over coffee grounds",
+    "brewing coffee with a french press",
+    "barista preparing coffee in a kitchen"
+  ],
+  "Tea Preparation": [
+    "steeping tea leaves in hot water",
+    "pouring tea from a teapot into cups",
+    "tea brewing in a glass teapot"
+  ],
+  "Sandwich Assembly": [
+    "assembling a sandwich with layered ingredients",
+    "placing fillings between slices of bread",
+    "cutting a sandwich in half on a plate"
+  ],
+  "Breakfast Cooking": [
+    "cooking eggs and bacon in a skillet",
+    "preparing breakfast on a stovetop",
+    "making pancakes in a frying pan"
+  ],
+  "Sifting": [
+    "sifting flour through a fine mesh sieve",
+    "powdered sugar being sifted over dessert",
+    "a baker shaking flour through a sifter"
+  ],
+  "Straining": [
+    "pouring cooked pasta into a colander",
+    "straining liquid from a pot of food",
+    "draining vegetables in a kitchen strainer"
+  ],
+  "Separating Eggs": [
+    "separating egg yolk from egg white",
+    "egg yolk held in a shell over a bowl",
+    "a cook separating eggs for baking"
+  ],
+  "Melting Butter": [
+    "butter melting in a small saucepan",
+    "melting butter on a stovetop pan",
+    "a cube of butter turning into liquid"
+  ],
+  "Basting": [
+    "basting meat with juices using a spoon",
+    "pouring cooking juices over roasting meat",
+    "basting a turkey while it cooks"
+  ],
+  "Glazing": [
+    "brushing glaze onto roasted meat",
+    "sweet glaze coating cooked food",
+    "applying shiny glaze to baked pastry"
+  ],
+  "Drizzling": [
+    "drizzling olive oil over a salad",
+    "thin stream of sauce over plated food",
+    "chef drizzling dressing over vegetables"
+  ],
+  "Layering Ingredients": [
+    "layering ingredients in a baking dish",
+    "building layers of pasta and sauce",
+    "stacking ingredients for a casserole"
+  ],
+  "Wrapping Food": [
+    "wrapping food in foil for cooking",
+    "folding parchment paper around ingredients",
+    "preparing food packets for the oven"
+  ],
+  "Cracking Nuts": [
+    "cracking nuts with a nutcracker",
+    "removing shells from walnuts",
+    "nuts being opened on a cutting board"
+  ],
+  "Shelling": [
+    "shelling peas from a pod",
+    "removing beans from fresh pods",
+    "hands opening vegetable pods"
+  ],
+  "Hulling Strawberries": [
+    "removing the green tops from strawberries",
+    "hulling fresh strawberries on a cutting board",
+    "preparing strawberries for dessert"
+  ],
+  "Core Removal": [
+    "removing the core from an apple",
+    "apple corer cutting through fruit",
+    "hollow center removed from fruit"
+  ],
+  "Scooping": [
+    "scooping batter with a spoon",
+    "ice cream scoop lifting frozen dessert",
+    "portioning food with a scoop"
+  ],
+  "Shaping Dough": [
+    "shaping bread dough into round loaves",
+    "forming dough balls by hand",
+    "rolling dough into smooth shapes"
+  ],
+  "Dusting": [
+    "dusting powdered sugar over dessert",
+    "light sprinkle of flour on dough surface",
+    "powdered sugar falling over baked goods"
+  ],
+  "Torching": [
+    "using a kitchen torch on creme brulee",
+    "flame caramelizing sugar on dessert",
+    "chef holding a culinary torch over food"
+  ],
+  "Cooling Food": [
+    "baked goods cooling on a wire rack",
+    "steam rising as food cools",
+    "fresh bread resting after baking"
+  ],
+  "Freezing Food": [
+    "placing food into a freezer",
+    "ice forming on frozen ingredients",
+    "containers of food stored in freezer"
+  ],
+  "Defrosting": [
+    "thawing frozen food in a kitchen sink",
+    "placing frozen ingredients on a counter",
+    "food slowly defrosting before cooking"
+  ],
+  "Crumbing": [
+    "coating food in breadcrumbs",
+    "bread crumbs covering chicken before frying",
+    "rolling ingredients in crumbs for coating"
+  ],
+  "Breading": [
+    "dipping food in egg and breadcrumbs",
+    "breaded cutlet prepared for frying",
+    "coating meat in flour and breadcrumbs"
+  ],
+  "Dipping": [
+    "dipping vegetables into sauce",
+    "food being dipped into melted chocolate",
+    "chef dipping ingredients into batter"
+  ],
+  "Skimming": [
+    "skimming foam from soup with a spoon",
+    "removing fat from the surface of broth",
+    "clearing foam from simmering liquid"
+  ],
+  "Poaching": [
+    "poaching eggs in simmering water",
+    "food gently cooking in hot liquid",
+    "poached egg lifted from a pot"
+  ],
+  "Simmering": [
+    "a pot of food gently simmering",
+    "small bubbles forming in simmering liquid",
+    "slow simmer on a stovetop pot"
+  ],
+  "Curing": [
+    "meat curing with salt and spices",
+    "dry curing ingredients in a tray",
+    "prepared meat resting with curing mixture"
+  ],
+  "Smoking Food": [
+    "food smoking in a smoker box",
+    "wood smoke surrounding meat",
+    "barbecue smoker releasing smoke"
+  ],
+  "Caramelizing": [
+    "onions caramelizing in a pan",
+    "sugar turning golden brown in a pot",
+    "slow cooked onions becoming golden"
+  ],
+  "Blanching": [
+    "vegetables quickly cooked in boiling water",
+    "green beans blanching in hot water",
+    "blanched vegetables transferred to ice bath"
+  ],
+  "Ice Bath": [
+    "vegetables placed in ice water after blanching",
+    "bowl of ice water cooling cooked food",
+    "steam rising from food placed in ice bath"
+  ],
+  "Rolling Sushi": [
+    "rolling sushi with a bamboo mat",
+    "forming sushi rolls by hand",
+    "cutting freshly rolled sushi"
+  ],
+  "Pizza Assembly": [
+    "spreading sauce over pizza dough",
+    "adding toppings to a pizza base",
+    "uncooked pizza prepared on a tray"
+  ],
+  "Tortilla Preparation": [
+    "pressing tortillas with a tortilla press",
+    "flat tortillas cooking on a hot pan",
+    "stack of freshly made tortillas"
+  ],
+  "Juicing": [
+    "squeezing citrus with a hand juicer",
+    "fresh juice flowing from fruit",
+    "juicing oranges on a kitchen counter"
+  ],
+  "Smoothie Making": [
+    "pouring fruit into a blender for smoothies",
+    "blended smoothie mixture in a blender jar",
+    "pouring smoothie into a glass"
+  ],
+  "Chocolate Drip": [
+    "melted chocolate dripping over cake",
+    "chocolate glaze slowly flowing down dessert",
+    "decorating cake with chocolate drip"
+  ],
+  "Candy Making": [
+    "boiling sugar syrup for candy",
+    "pulling sugar mixture into candy shapes",
+    "homemade candy cooling on parchment"
+  ],
+  "Food Packing": [
+    "packing prepared food into containers",
+    "placing cooked meals into storage boxes",
+    "organized meal prep containers"
+  ],
+  "Table Setting": [
+    "setting plates and utensils on a dining table",
+    "arranging napkins and glasses for dinner",
+    "formal table setup before serving food"
+  ]
+}

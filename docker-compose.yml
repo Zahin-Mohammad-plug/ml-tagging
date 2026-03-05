@@ -1,0 +1,347 @@
+# version is obsolete in Docker Compose v2+
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: ml-tagger-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ml_tagger}
+      POSTGRES_USER: ${POSTGRES_USER:-tagger}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tagger_dev_password}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./store/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - tagger-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tagger} -d ${POSTGRES_DB:-ml_tagger}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ml-tagger-queue
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "7200:6379"  # Changed host port to 7200 (outside Windows reserved port range)
+    networks:
+      - tagger-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  tagger-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: ml-tagger-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tagger}:${POSTGRES_PASSWORD:-tagger_dev_password}@postgres:5432/${POSTGRES_DB:-ml_tagger}
+      
+      # Queue
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379/0
+      
+      # API Configuration
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8080}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Security
+      API_SECRET_KEY: ${API_SECRET_KEY:-dev_secret_key_change_in_production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:9999}
+      
+      # Processing Configuration
+      MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-3}
+      JOB_TIMEOUT_SECONDS: ${JOB_TIMEOUT_SECONDS:-1800}
+      
+    volumes:
+      - ./api:/app
+      - ./prompts:/app/prompts:ro  # Tag prompts directory
+      - ./workers:/app/workers:ro  # Read-only access to workers directory for tag_prompts.json
+      - /tmp/ml-tagger-cache:/tmp/cache
+      - frames_cache:/app/frames:ro  # Read-only access to frames
+    ports:
+      - "9898:8080"  # Host port outside Windows Hyper-V excluded port ranges
+    networks:
+      - tagger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sampler-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+      target: sampler
+    container_name: ml-tagger-sampler
+    user: root  # Run as root initially to fix permissions, then switch to worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database & Queue
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tagger}:${POSTGRES_PASSWORD:-tagger_dev_password}@postgres:5432/${POSTGRES_DB:-ml_tagger}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379/0
+      
+      # Worker Configuration
+      WORKER_NAME: sampler
+      WORKER_CONCURRENCY: ${SAMPLER_CONCURRENCY:-2}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Sampling Configuration
+      SAMPLE_FPS: ${SAMPLE_FPS:-0.5}
+      MAX_FRAMES_PER_SCENE: ${MAX_FRAMES_PER_SCENE:-100}
+      SAMPLE_QUALITY: ${SAMPLE_QUALITY:-medium}
+      CACHE_FRAMES: ${CACHE_FRAMES:-true}
+      
+      # FFmpeg Configuration
+      FFMPEG_THREADS: ${FFMPEG_THREADS:-2}
+      FFMPEG_TIMEOUT: ${FFMPEG_TIMEOUT:-300}
+      
+    volumes:
+      - ./workers:/app
+      - ./prompts:/app/prompts:ro  # Tag prompts
+      - /tmp/ml-tagger-cache:/tmp/cache
+      - ${VIDEO_MEDIA_PATH:-/media/videos}:/media:ro
+      - frames_cache:/app/.cache/frames  # Shared volume for frame storage
+    networks:
+      - tagger-network
+    restart: unless-stopped
+
+  embeddings-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+      target: embeddings
+    container_name: ml-tagger-embeddings
+    user: root  # Run as root initially to fix permissions, then switch to worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database & Queue
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tagger}:${POSTGRES_PASSWORD:-tagger_dev_password}@postgres:5432/${POSTGRES_DB:-ml_tagger}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379/0
+      
+      # Worker Configuration
+      WORKER_NAME: embeddings
+      WORKER_CONCURRENCY: ${EMBEDDINGS_CONCURRENCY:-1}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Vision Model Configuration
+      VISION_MODEL: ${VISION_MODEL:-clip-vit-base-patch32}
+      VISION_DEVICE: ${VISION_DEVICE:-auto}
+      BATCH_SIZE: ${EMBEDDINGS_BATCH_SIZE:-4}
+      EMBEDDING_BATCH_SIZE: ${EMBEDDINGS_BATCH_SIZE:-4}
+      
+      # Transformers Cache Configuration
+      TRANSFORMERS_CACHE: /tmp/cache/transformers
+      HF_HOME: /tmp/cache/transformers
+      
+    volumes:
+      - ./workers:/app
+      - ./prompts:/app/prompts:ro  # Tag prompts
+      - /tmp/ml-tagger-cache:/tmp/cache
+      - transformers_cache:/tmp/cache/transformers
+      - ./models:/models:ro
+      - frames_cache:/app/.cache/frames:ro  # Read-only access to frames
+    networks:
+      - tagger-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  asr-ocr-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+      target: asr-ocr
+    container_name: ml-tagger-asr-ocr
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database & Queue
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tagger}:${POSTGRES_PASSWORD:-tagger_dev_password}@postgres:5432/${POSTGRES_DB:-ml_tagger}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379/0
+      
+      # Worker Configuration
+      WORKER_NAME: asr-ocr
+      WORKER_CONCURRENCY: ${ASR_OCR_CONCURRENCY:-1}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # ASR Configuration
+      ASR_MODEL: ${ASR_MODEL:-whisper-small}
+      ASR_DEVICE: ${ASR_DEVICE:-auto}
+      ASR_LANGUAGE: ${ASR_LANGUAGE:-en}
+      
+      # OCR Configuration
+      OCR_ENGINE: ${OCR_ENGINE:-paddleocr}
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-en}
+      
+      # Audio Extraction
+      AUDIO_SAMPLE_RATE: ${AUDIO_SAMPLE_RATE:-16000}
+      AUDIO_CHUNK_DURATION: ${AUDIO_CHUNK_DURATION:-30}
+      
+    volumes:
+      - ./workers:/app
+      - ./prompts:/app/prompts:ro  # Tag prompts
+      - /tmp/ml-tagger-cache:/tmp/cache
+      - ./models:/models:ro
+    networks:
+      - tagger-network
+    restart: unless-stopped
+
+  fusion-worker:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+      target: fusion
+    container_name: ml-tagger-fusion
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database & Queue
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-tagger}:${POSTGRES_PASSWORD:-tagger_dev_password}@postgres:5432/${POSTGRES_DB:-ml_tagger}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379/0
+      
+      # Worker Configuration
+      WORKER_NAME: fusion
+      WORKER_CONCURRENCY: ${FUSION_CONCURRENCY:-1}  # Reduced from 2 to 1 to prevent OOM
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Fusion Configuration
+      MIN_AGREEMENT_FRAMES: ${MIN_AGREEMENT_FRAMES:-3}
+      TEMPORAL_WINDOW_SECONDS: ${TEMPORAL_WINDOW_SECONDS:-10}
+      
+      # Signal Weights
+      VISION_WEIGHT: ${VISION_WEIGHT:-0.7}
+      ASR_WEIGHT: ${ASR_WEIGHT:-0.2}
+      OCR_WEIGHT: ${OCR_WEIGHT:-0.1}
+      
+      # Thresholds
+      DEFAULT_REVIEW_THRESHOLD: ${DEFAULT_REVIEW_THRESHOLD:-0.3}
+      DEFAULT_AUTO_THRESHOLD: ${DEFAULT_AUTO_THRESHOLD:-0.8}
+      
+      # Calibration
+      USE_CALIBRATED_CONFIDENCE: ${USE_CALIBRATED_CONFIDENCE:-true}
+      CALIBRATION_MODEL_PATH: ${CALIBRATION_MODEL_PATH:-/models/calibration.pkl}
+      
+      # Transformers Cache Configuration (for tag embedding generation)
+      TRANSFORMERS_CACHE: /tmp/cache/transformers
+      HF_HOME: /tmp/cache/transformers
+      
+      # Vision Model Configuration (for CLIP model used in fusion)
+      VISION_DEVICE: ${VISION_DEVICE:-auto}  # Use GPU if available
+      CLIP_MODEL_NAME: ${CLIP_MODEL_NAME:-laion/CLIP-ViT-L-14-laion2B-s32B-b82K}
+      
+    volumes:
+      - ./workers:/app
+      - ./prompts:/app/prompts:ro  # Tag prompts
+      - ./scripts:/app/scripts:ro  # Mount scripts directory for test_scenes.json
+      - /tmp/ml-tagger-cache:/tmp/cache
+      - transformers_cache:/tmp/cache/transformers
+      - ./models:/models:ro
+    networks:
+      - tagger-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 5G  # Increased to 5G - CLIP ViT-L/14 model is very memory-intensive, especially when loading on GPU
+        reservations:
+          memory: 2G  # Reserve minimum memory
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: ml-tagger-ui
+    depends_on:
+      - tagger-api
+    environment:
+      # API Configuration - Leave empty to use proxy
+      REACT_APP_API_URL: ${UI_API_URL:-}
+      
+      # UI Configuration
+      PORT: 3000  # Container internal port (always 3000)
+      HOST: 0.0.0.0  # Bind to all interfaces so it's accessible from host
+      NODE_ENV: ${NODE_ENV:-development}
+      # Webpack Dev Server configuration for Docker
+      WDS_SOCKET_HOST: localhost
+      WDS_SOCKET_PORT: 3000
+      DANGEROUSLY_DISABLE_HOST_CHECK: "true"  # Allow access from host in Docker
+      
+      # Features
+      REACT_APP_ENABLE_AUTO_APPROVE: ${ENABLE_AUTO_APPROVE:-false}
+      REACT_APP_SHOW_CONFIDENCE_DETAILS: ${SHOW_CONFIDENCE_DETAILS:-true}
+      REACT_APP_MAX_EVIDENCE_FRAMES: ${MAX_EVIDENCE_FRAMES:-5}
+      
+    volumes:
+      - ./ui:/app
+      - /app/node_modules
+    ports:
+      - "${UI_PORT:-3001}:3000"  # Map host port (from .env UI_PORT) to container port 3000
+    networks:
+      - tagger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  transformers_cache:
+    driver: local
+  frames_cache:  # Shared volume for frame storage (accessible by sampler and API)
+    driver: local
+
+networks:
+  tagger-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
