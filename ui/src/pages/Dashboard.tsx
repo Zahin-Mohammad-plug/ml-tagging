@@ -19,16 +19,22 @@ import axios from 'axios';
 
 interface Stats {
   suggestions?: {
-    pending?: number;
-    approved?: number;
-    rejected?: number;
-    total?: number;
+    pending_count?: number;
+    approved_count?: number;
+    rejected_count?: number;
+    total_suggestions?: number;
   };
   jobs?: {
-    queued?: number;
-    processing?: number;
-    completed?: number;
-    failed?: number;
+    status_breakdown?: {
+      queued?: number;
+      sampling?: number;
+      embeddings?: number;
+      asr_ocr?: number;
+      fusion?: number;
+      completed?: number;
+      failed?: number;
+      cancelled?: number;
+    };
   };
 }
 
@@ -122,7 +128,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Pending Review"
-            value={stats.suggestions?.pending || 0}
+            value={stats.suggestions?.pending_count || 0}
             icon={<HourglassEmpty sx={{ fontSize: 40 }} />}
             color="#ff9800"
           />
@@ -131,7 +137,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Approved"
-            value={stats.suggestions?.approved || 0}
+            value={stats.suggestions?.approved_count || 0}
             icon={<CheckCircle sx={{ fontSize: 40 }} />}
             color="#4caf50"
           />
@@ -140,7 +146,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Rejected"
-            value={stats.suggestions?.rejected || 0}
+            value={stats.suggestions?.rejected_count || 0}
             icon={<Cancel sx={{ fontSize: 40 }} />}
             color="#f44336"
           />
@@ -149,7 +155,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Total Suggestions"
-            value={stats.suggestions?.total || 0}
+            value={stats.suggestions?.total_suggestions || 0}
             icon={<TrendingUp sx={{ fontSize: 40 }} />}
             color="#2196f3"
           />
@@ -165,7 +171,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Queued"
-            value={stats.jobs?.queued || 0}
+            value={stats.jobs?.status_breakdown?.queued || 0}
             icon={<HourglassEmpty sx={{ fontSize: 40 }} />}
             color="#9e9e9e"
           />
@@ -174,7 +180,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Processing"
-            value={stats.jobs?.processing || 0}
+            value={(stats.jobs?.status_breakdown?.sampling || 0) + (stats.jobs?.status_breakdown?.embeddings || 0) + (stats.jobs?.status_breakdown?.asr_ocr || 0) + (stats.jobs?.status_breakdown?.fusion || 0)}
             icon={<CircularProgress size={40} />}
             color="#2196f3"
           />
@@ -183,7 +189,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Completed"
-            value={stats.jobs?.completed || 0}
+            value={stats.jobs?.status_breakdown?.completed || 0}
             icon={<CheckCircle sx={{ fontSize: 40 }} />}
             color="#4caf50"
           />
@@ -192,7 +198,7 @@ const Dashboard: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Failed"
-            value={stats.jobs?.failed || 0}
+            value={stats.jobs?.status_breakdown?.failed || 0}
             icon={<Cancel sx={{ fontSize: 40 }} />}
             color="#f44336"
           />

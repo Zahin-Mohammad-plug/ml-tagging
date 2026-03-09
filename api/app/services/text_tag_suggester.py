@@ -1,4 +1,4 @@
-"""Service for generating tag suggestions based on scene descriptions and titles using CLIP text embeddings"""
+"""Service for generating tag suggestions based on video descriptions and titles using CLIP text embeddings"""
 
 from typing import Optional, List, Dict, Any
 import structlog
@@ -169,13 +169,13 @@ class TextTagSuggester:
         max_suggestions: int = 50,
     ) -> List[Dict[str, Any]]:
         """
-        Generate tag suggestions based on scene description, title, and optionally OCR text.
+        Generate tag suggestions based on video description, title, and optionally OCR text.
         
         Args:
             scene: VideoScene object with description and title
-            existing_tag_ids: List of tag IDs already on the scene (to exclude)
-            use_description: Whether to use scene description
-            use_title: Whether to use scene title
+            existing_tag_ids: List of tag IDs already on the video (to exclude)
+            use_description: Whether to use video description
+            use_title: Whether to use video title
             use_ocr: Whether to include OCR text if available
             min_confidence: Minimum confidence threshold for suggestions
             max_suggestions: Maximum number of suggestions to return

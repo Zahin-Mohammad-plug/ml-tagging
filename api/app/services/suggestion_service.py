@@ -382,14 +382,14 @@ class SuggestionService:
                             frame_number = 0
                     
                     # Use overall suggestion confidence as fallback for frame confidence
-                    # Since we don't store individual frame confidence scores
+                    # Since we don't store individual frame confidence scores for legacy data
                     frame_confidence = suggestion.get("confidence", 0.0)
                     
                     evidence_frames.append(
                         EvidenceFrame(
                             frame_number=frame_number,
                             timestamp_seconds=timestamp,
-                            confidence=frame_confidence,  # Use suggestion confidence as fallback
+                            confidence=frame_confidence,
                             thumbnail_url=thumbnail_url,
                             signals={"frame_id": frame_id, "file_path": frame_dict.get("file_path")},
                         )
@@ -406,33 +406,51 @@ class SuggestionService:
                         )
                     )
             elif isinstance(frame_data, dict):
-                # Full frame data object
+                # Full frame data object (new format with per-frame confidence, or legacy)
                 frame_id = frame_data.get("frame_id") or frame_data.get("id")
                 frame_file_path = frame_data.get("file_path")
                 thumbnail_url = frame_data.get("thumbnail_url")
                 
                 # If we have frame_id but no thumbnail_url, create one
-                if frame_id and not thumbnail_url and frame_file_path:
+                if frame_id and not thumbnail_url:
                     thumbnail_url = f"/api/frames/{frame_id}/image"
                 
-                # Handle None values for all fields
+                # Per-frame confidence from fusion worker (new format) or fallback
+                confidence = frame_data.get("confidence")
+                if confidence is None:
+                    confidence = suggestion.get("confidence", 0.0)
+                else:
+                    confidence = float(confidence)
+                
+                # Look up frame details from DB if we have a frame_id but no number/timestamp
                 frame_number = frame_data.get("frame_number")
+                timestamp = frame_data.get("timestamp_seconds")
+                
+                if frame_id and (frame_number is None or timestamp is None):
+                    frame_query = sa.select(
+                        frame_samples_table.c.frame_number,
+                        frame_samples_table.c.timestamp_seconds,
+                        frame_samples_table.c.file_path
+                    ).where(frame_samples_table.c.id == frame_id)
+                    frame_record = await self._execute_query(frame_query, fetch="one")
+                    if frame_record:
+                        frame_dict = frame_record if isinstance(frame_record, dict) else {}
+                        if frame_number is None:
+                            frame_number = frame_dict.get("frame_number", 0)
+                        if timestamp is None:
+                            timestamp = frame_dict.get("timestamp_seconds", 0.0)
+                        if not frame_file_path:
+                            frame_file_path = frame_dict.get("file_path")
+
                 if frame_number is None:
                     frame_number = 0
                 else:
                     frame_number = int(frame_number)
                 
-                timestamp = frame_data.get("timestamp_seconds")
                 if timestamp is None:
                     timestamp = 0.0
                 else:
                     timestamp = float(timestamp)
-                
-                confidence = frame_data.get("confidence")
-                if confidence is None:
-                    confidence = 0.0
-                else:
-                    confidence = float(confidence)
                 
                 evidence_frames.append(
                     EvidenceFrame(
@@ -440,7 +458,7 @@ class SuggestionService:
                         timestamp_seconds=timestamp,
                         confidence=confidence,
                         thumbnail_url=thumbnail_url,
-                        signals=frame_data.get("signals", {}),
+                        signals=frame_data.get("signals", {"frame_id": frame_id, "file_path": frame_file_path}),
                     )
                 )
 

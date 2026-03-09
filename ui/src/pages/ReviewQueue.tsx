@@ -57,7 +57,7 @@ interface SuggestionItem {
   created_at: string;
 }
 
-interface SceneOption {
+interface VideoOption {
   video_id: string;
   title: string;
 }
@@ -67,8 +67,8 @@ const ReviewQueue: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.5);
-  const [sceneFilter, setSceneFilter] = useState<string>('all');
-  const [availableScenes, setAvailableScenes] = useState<SceneOption[]>([]);
+  const [videoFilter, setVideoFilter] = useState<string>('all');
+  const [availableVideos, setAvailableVideos] = useState<VideoOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
@@ -110,18 +110,18 @@ const ReviewQueue: React.FC = () => {
       setItemsPerPage(parseInt(savedItemsPerPage, 10));
     }
     
-    // Load available scenes for filter
-    const loadScenes = async () => {
+    // Load available videos for filter
+    const loadVideos = async () => {
       try {
         const response = await axios.get(`${apiUrl}/suggestions/videos`);
-        const scenes = response.data || [];
-        console.log('Loaded scenes for filter:', scenes.length, scenes);
-        setAvailableScenes(scenes);
+        const videos = response.data || [];
+        console.log('Loaded videos for filter:', videos.length, videos);
+        setAvailableVideos(videos);
       } catch (err) {
-        console.error('Failed to load scenes for filter:', err);
+        console.error('Failed to load videos for filter:', err);
       }
     };
-    loadScenes();
+    loadVideos();
   }, [apiUrl]);
 
   const fetchSuggestions = useCallback(async () => {
@@ -137,8 +137,8 @@ const ReviewQueue: React.FC = () => {
         params.status = statusFilter;
       }
       
-      if (sceneFilter !== 'all') {
-        params.video_id = sceneFilter;
+      if (videoFilter !== 'all') {
+        params.video_id = videoFilter;
       }
       
       // Use min_confidence as a display filter (not a processing filter)
@@ -167,7 +167,7 @@ const ReviewQueue: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, statusFilter, sceneFilter, confidenceThreshold, sortBy, sortOrder, page, itemsPerPage]);
+  }, [apiUrl, statusFilter, videoFilter, confidenceThreshold, sortBy, sortOrder, page, itemsPerPage]);
 
   useEffect(() => {
     fetchSuggestions();
@@ -443,20 +443,20 @@ const ReviewQueue: React.FC = () => {
             <FormLabel component="legend">Filter by Video</FormLabel>
             <RadioGroup
               row
-              value={sceneFilter}
+              value={videoFilter}
               onChange={(e) => {
-                setSceneFilter(e.target.value);
+                setVideoFilter(e.target.value);
                 setSelectedIds(new Set()); // Clear selection when filter changes
                 setPage(1); // Reset to first page
               }}
             >
               <FormControlLabel value="all" control={<Radio />} label="All Videos" />
-              {availableScenes.map((scene) => (
+              {availableVideos.map((video) => (
                 <FormControlLabel
-                  key={scene.video_id}
-                  value={scene.video_id}
+                  key={video.video_id}
+                  value={video.video_id}
                   control={<Radio />}
-                  label={`${scene.title} (ID: ${scene.video_id})`}
+                  label={`${video.title} (ID: ${video.video_id})`}
                 />
               ))}
             </RadioGroup>
@@ -474,7 +474,7 @@ const ReviewQueue: React.FC = () => {
             >
               <MenuItem value="confidence">Confidence</MenuItem>
               <MenuItem value="date">Date</MenuItem>
-              <MenuItem value="scene">Video ID</MenuItem>
+              <MenuItem value="video">Video ID</MenuItem>
             </Select>
           </FormControl>
 

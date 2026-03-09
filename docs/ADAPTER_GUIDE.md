@@ -9,7 +9,7 @@ Today, videos are ingested via the `/ingest` API endpoint which accepts metadata
 ```
 POST /ingest
 {
-  "scene_id": "vid001",
+  "video_id": "vid001",
   "title": "Pasta Recipe Episode 3",
   "path": "pasta/ep3.mp4",
   "duration": 1824.5,

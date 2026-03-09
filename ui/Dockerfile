@@ -1,11 +1,11 @@
 # Multi-stage React build for UI
-FROM node:18-alpine as build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --legacy-peer-deps --omit=dev
 
 # Copy source code
 COPY . .
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine as production
+FROM node:18-alpine AS production
 
 WORKDIR /app
 
@@ -43,7 +43,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 CMD ["serve", "-s", "build", "-l", "3000"]
 
 # Development stage
-FROM node:18-alpine as development
+FROM node:18-alpine AS development
 
 WORKDIR /app
 
@@ -59,7 +59,7 @@ USER react
 COPY --chown=react:nodejs package*.json ./
 
 # Install as react user
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy source code with correct ownership
 COPY --chown=react:nodejs . .

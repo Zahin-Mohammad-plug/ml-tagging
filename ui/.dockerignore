@@ -1,0 +1,7 @@
+node_modules
+build
+package-lock.json
+.env
+.env.local
+.env.*.local
+npm-debug.log*

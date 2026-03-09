@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for workers
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -48,21 +48,21 @@ ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "-m", "celery", "-A", "app.celery_app", "worker", "-l", "info"]
 
 # Sampler worker (FFmpeg frame extraction)
-FROM base as sampler
+FROM base AS sampler
 ENV WORKER_TYPE=sampler
 CMD ["python", "-m", "celery", "-A", "app.celery_app", "worker", "-Q", "sampling", "-n", "sampler@%h", "-l", "info"]
 
 # Embeddings worker (GPU-intensive)
-FROM base as embeddings
+FROM base AS embeddings
 ENV WORKER_TYPE=embeddings
 CMD ["python", "-m", "celery", "-A", "app.celery_app", "worker", "-Q", "embeddings", "-n", "embeddings@%h", "-l", "info", "--concurrency=1"]
 
 # ASR/OCR worker
-FROM base as asr-ocr
+FROM base AS asr-ocr
 ENV WORKER_TYPE=asr_ocr
 CMD ["python", "-m", "celery", "-A", "app.celery_app", "worker", "-Q", "asr_ocr", "-n", "asr_ocr@%h", "-l", "info"]
 
 # Fusion worker (combines signals and generates suggestions)
-FROM base as fusion
+FROM base AS fusion
 ENV WORKER_TYPE=fusion
 CMD ["python", "-m", "celery", "-A", "app.celery_app", "worker", "-Q", "fusion", "-n", "fusion@%h", "-l", "info"]

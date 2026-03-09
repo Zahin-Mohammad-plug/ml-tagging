@@ -215,11 +215,11 @@ const Settings: React.FC = () => {
               <TextField
                 fullWidth
                 type="number"
-                label="Max Frames Per Scene"
+                label="Max Frames Per Video"
                 value={settings.max_frames_per_scene || 100}
                 onChange={(e) => updateSetting('max_frames_per_scene', parseInt(e.target.value))}
                 inputProps={{ min: 1, max: 1000 }}
-                helperText="Maximum number of frames to process per scene"
+                helperText="Maximum number of frames to process per video"
                 sx={{ mb: 2 }}
               />
               <TextField

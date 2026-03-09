@@ -115,8 +115,8 @@ class ApprovalRequest(BaseModel):
 
 # Text-based tag suggestions
 class TextBasedSuggestionsRequest(BaseModel):
-    use_description: bool = Field(default=True, description="Whether to use scene description")
-    use_title: bool = Field(default=True, description="Whether to use scene title")
+    use_description: bool = Field(default=True, description="Whether to use video description")
+    use_title: bool = Field(default=True, description="Whether to use video title")
     use_ocr: bool = Field(default=False, description="Whether to include OCR text if available")
     min_confidence: float = Field(default=0.3, ge=0.0, le=1.0, description="Minimum confidence threshold")
     max_suggestions: int = Field(default=50, ge=1, le=200, description="Maximum number of suggestions to return")

@@ -260,11 +260,11 @@ def extract_frames(self, job_id: str, scene_data: Dict[str, Any]) -> Dict[str, A
     try:
         scene_id = scene_data.get("id")
         if not scene_id:
-            raise ValueError("Scene ID not provided")
+            raise ValueError("Video ID not provided")
 
         scene_path = scene_data.get("path")
         if not scene_path:
-            raise ValueError("Video path not provided in scene_data")
+            raise ValueError("Video path not provided in video data")
 
         input_path = convert_scene_path(scene_path)
         if not os.path.exists(input_path):

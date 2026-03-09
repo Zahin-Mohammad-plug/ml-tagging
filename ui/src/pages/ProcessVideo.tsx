@@ -23,12 +23,12 @@ import {
 import { ExpandMore } from '@mui/icons-material';
 import { PlayArrow, Info, Cancel } from '@mui/icons-material';
 import axios from 'axios';
-import SceneGallery from '../components/SceneGallery';
+import VideoGallery from '../components/VideoGallery';
 import JobMonitor from '../components/JobMonitor';
 
 const ProcessVideo: React.FC = () => {
-  const [sceneId, setSceneId] = useState('');
-  const [selectedSceneIds, setSelectedSceneIds] = useState<string[]>([]);
+  const [videoId, setVideoId] = useState('');
+  const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [multiSelect, setMultiSelect] = useState(true); // Default to multi-select
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +51,8 @@ const ProcessVideo: React.FC = () => {
     const loadSettings = async () => {
       try {
         const response = await axios.get(`${apiUrl}/settings`);
-        if (response.data.max_frames_per_scene) {
-          setMaxFrames(response.data.max_frames_per_scene);
+        if (response.data.max_frames_per_scene || response.data.max_frames_per_video) {
+          setMaxFrames(response.data.max_frames_per_video || response.data.max_frames_per_scene);
         }
         if (response.data.sample_fps) {
           setSampleFps(response.data.sample_fps);
@@ -91,15 +91,15 @@ const ProcessVideo: React.FC = () => {
     return () => clearInterval(interval);
   }, [apiUrl]);
 
-  const handleSelectScene = (id: string) => {
-    setSceneId(id);
+  const handleSelectVideo = (id: string) => {
+    setVideoId(id);
     setError(null);
   };
 
   const handleProcess = async () => {
-    const scenesToProcess = multiSelect ? selectedSceneIds : (sceneId ? [sceneId] : []);
+    const videosToProcess = multiSelect ? selectedVideoIds : (videoId ? [videoId] : []);
     
-    if (scenesToProcess.length === 0) {
+    if (videosToProcess.length === 0) {
       setError('Please select at least one video from the gallery');
       return;
     }
@@ -129,26 +129,26 @@ const ProcessVideo: React.FC = () => {
         jobOptions.auto_delete_threshold = autoDeleteThreshold;
       }
       
-      const jobPromises = scenesToProcess.map(sceneId =>
+      const jobPromises = videosToProcess.map(id =>
         axios.post(`${apiUrl}/ingest`, {
-          video_id: sceneId,
+          video_id: id,
           ...jobOptions
         })
       );
       
       const responses = await Promise.all(jobPromises);
-      const newJobIds = responses.map(r => r.data.job_id);
+      const newJobIds = responses.map((r: any) => r.data.job_id);
       
-      setSuccess(`Processing started for ${scenesToProcess.length} video(s)!`);
+      setSuccess(`Processing started for ${videosToProcess.length} video(s)!`);
       
       // Add to active jobs list
-      setActiveJobs(prev => [...prev, ...newJobIds]);
+      setActiveJobs((prev: string[]) => [...prev, ...newJobIds]);
       
       // Clear selection
       if (multiSelect) {
-        setSelectedSceneIds([]);
+        setSelectedVideoIds([]);
       } else {
-        setSceneId('');
+        setVideoId('');
       }
       
     } catch (err: any) {
@@ -212,7 +212,7 @@ const ProcessVideo: React.FC = () => {
               refreshInterval={5000}
               onComplete={() => {
                 // Remove from active jobs when completed
-                setActiveJobs(prev => prev.filter(id => id !== jobId));
+                setActiveJobs((prev: string[]) => prev.filter((id: string) => id !== jobId));
                 setSuccess('Processing completed! Check the Review Queue for suggestions.');
               }}
             />
@@ -243,20 +243,20 @@ const ProcessVideo: React.FC = () => {
                   onChange={(e) => {
                     setMultiSelect(e.target.checked);
                     if (!e.target.checked) {
-                      setSelectedSceneIds([]);
+                      setSelectedVideoIds([]);
                     } else {
-                      setSceneId('');
+                      setVideoId('');
                     }
                   }}
                 />
               }
               label="Multi-select mode"
             />
-            {multiSelect && selectedSceneIds.length > 0 && (
+            {multiSelect && selectedVideoIds.length > 0 && (
               <Button
                 size="small"
                 variant="outlined"
-                onClick={() => setSelectedSceneIds([])}
+                onClick={() => setSelectedVideoIds([])}
               >
                 Clear Selection
               </Button>
@@ -265,26 +265,26 @@ const ProcessVideo: React.FC = () => {
               {multiSelect ? (
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                   <Typography variant="body2" color="text.secondary">
-                    {selectedSceneIds.length > 0 ? `${selectedSceneIds.length} video(s) selected` : 'Select videos from the gallery below'}
+                    {selectedVideoIds.length > 0 ? `${selectedVideoIds.length} video(s) selected` : 'Select videos from the gallery below'}
                   </Typography>
-                  {selectedSceneIds.length > 0 && (
-                    <Chip label={`${selectedSceneIds.length} selected`} size="small" color="primary" />
+                  {selectedVideoIds.length > 0 && (
+                    <Chip label={`${selectedVideoIds.length} selected`} size="small" color="primary" />
                   )}
                 </Box>
               ) : (
             <Typography variant="body2" color="text.secondary">
-              {sceneId ? `Selected Video: ${sceneId}` : 'Select a video from the gallery below'}
+              {videoId ? `Selected Video: ${videoId}` : 'Select a video from the gallery below'}
             </Typography>
               )}
             </Box>
             <Button
               variant="contained"
               onClick={handleProcess}
-              disabled={loading || (multiSelect ? selectedSceneIds.length === 0 : !sceneId.trim())}
+              disabled={loading || (multiSelect ? selectedVideoIds.length === 0 : !videoId.trim())}
               size="large"
               startIcon={loading ? <CircularProgress size={20} /> : <PlayArrow />}
             >
-              {loading ? 'Starting...' : multiSelect ? `Process ${selectedSceneIds.length || 0} Video(s)` : 'Process Selected Video'}
+              {loading ? 'Starting...' : multiSelect ? `Process ${selectedVideoIds.length || 0} Video(s)` : 'Process Selected Video'}
             </Button>
           </Box>
 
@@ -385,7 +385,7 @@ const ProcessVideo: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Scene Gallery */}
+      {/* Video Gallery */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
@@ -394,16 +394,16 @@ const ProcessVideo: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Browse your recent videos and click to select one for processing
           </Typography>
-          <SceneGallery
-            onSceneSelect={handleSelectScene}
-            selectedSceneId={sceneId}
-            selectedSceneIds={selectedSceneIds}
-            onMultiSelect={setSelectedSceneIds}
+          <VideoGallery
+            onVideoSelect={handleSelectVideo}
+            selectedVideoId={videoId}
+            selectedVideoIds={selectedVideoIds}
+            onMultiSelect={setSelectedVideoIds}
             multiSelect={multiSelect}
             limit={20}
             showProcessed={true}
-            onSelectAll={(sceneIds: string[]) => {
-              setSelectedSceneIds(sceneIds);
+            onSelectAll={(videoIds: string[]) => {
+              setSelectedVideoIds(videoIds);
             }}
           />
         </CardContent>

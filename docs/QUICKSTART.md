@@ -51,7 +51,7 @@ Wait for the health checks to pass (about 30-60 seconds on first boot while mode
 Open the UI at **http://localhost:3001**.
 
 1. Go to **Process Video**.
-2. Enter a video file path relative to your media folder (e.g. `ep1.mp4` or `subfolder/ep1.mp4`) or use the scene browser.
+2. Enter a video file path relative to your media folder (e.g. `ep1.mp4` or `subfolder/ep1.mp4`) or use the video browser.
 3. Click **Process** — the pipeline runs: sampling → embeddings → ASR/OCR → fusion.
 4. When complete, go to **Review** to see tag suggestions with confidence scores.
 5. **Approve** or **Reject** each suggestion.
@@ -65,7 +65,7 @@ curl http://localhost:9898/health
 # Ingest a video
 curl -X POST http://localhost:9898/ingest \
   -H "Content-Type: application/json" \
-  -d '{"scene_id": "vid001", "title": "Pasta Recipe", "path": "pasta-recipe.mp4"}'
+  -d '{"video_id": "vid001", "title": "Pasta Recipe", "path": "pasta-recipe.mp4"}'
 
 # List jobs
 curl http://localhost:9898/jobs

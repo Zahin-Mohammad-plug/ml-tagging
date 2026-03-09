@@ -2038,7 +2038,7 @@ def _find_evidence_frames(
     visual_scores: List[float],
     text_scores: List[float],
     top_k: int = 3
-) -> List[str]:
+) -> List[Dict[str, Any]]:
     """
     Find top evidence frames for tag suggestion
     
@@ -2049,7 +2049,7 @@ def _find_evidence_frames(
         top_k: Number of evidence frames to return
     
     Returns:
-        List of frame IDs with strongest evidence
+        List of frame evidence dicts with per-frame confidence
     """
     
     # Combine scores for ranking
@@ -2060,9 +2060,15 @@ def _find_evidence_frames(
     # Get top-k frames
     top_indices = np.argsort(combined_scores)[-top_k:][::-1]
     
-    evidence_frame_ids = [frames[i]["id"] for i in top_indices if i < len(frames)]
+    evidence = []
+    for i in top_indices:
+        if i < len(frames):
+            evidence.append({
+                "frame_id": frames[i]["id"],
+                "confidence": round(float(combined_scores[i]), 6),
+            })
     
-    return evidence_frame_ids
+    return evidence
 
 
 def _generate_tag_suggestions(

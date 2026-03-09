@@ -266,14 +266,49 @@ async def list_videos(
             rows = result.mappings().all()
 
             videos = []
+            scene_ids = []
             for row in rows:
+                scene_ids.append(row["scene_id"])
                 videos.append({
                     "video_id": row["scene_id"],
                     "title": row.get("title") or f"Video {row['scene_id']}",
                     "created_at": row.get("created_at"),
                     "file_path": row.get("file_path"),
                     "duration": row.get("duration_seconds"),
+                    "thumbnail_url": None,
+                    "frame_count": 0,
                 })
+
+            # Batch-fetch first frame per video for thumbnails
+            if scene_ids:
+                thumb_query = sa.text("""
+                    SELECT DISTINCT ON (fs.scene_id)
+                        fs.scene_id, fs.id AS frame_id
+                    FROM frame_samples fs
+                    JOIN jobs j ON fs.job_id = j.job_id
+                    WHERE fs.scene_id = ANY(:scene_ids)
+                    ORDER BY fs.scene_id, fs.frame_number ASC
+                """)
+                thumb_result = await session.execute(thumb_query, {"scene_ids": scene_ids})
+                thumb_map = {r.scene_id: r.frame_id for r in thumb_result.fetchall()}
+
+                # Batch-fetch frame counts per video
+                count_query = sa.text("""
+                    SELECT fs.scene_id, COUNT(*) AS cnt
+                    FROM frame_samples fs
+                    JOIN jobs j ON fs.job_id = j.job_id
+                    WHERE fs.scene_id = ANY(:scene_ids)
+                    GROUP BY fs.scene_id
+                """)
+                count_result = await session.execute(count_query, {"scene_ids": scene_ids})
+                count_map = {r.scene_id: r.cnt for r in count_result.fetchall()}
+
+                for v in videos:
+                    sid = v["video_id"]
+                    fid = thumb_map.get(sid)
+                    if fid:
+                        v["thumbnail_url"] = f"/api/frames/{fid}/image"
+                    v["frame_count"] = count_map.get(sid, 0)
 
             return {
                 "videos": videos,
@@ -316,6 +351,57 @@ async def get_video(
         raise
     except Exception as e:
         logger.error("Failed to get video", video_id=video_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/videos/{video_id}/frames")
+async def get_video_frames(
+    video_id: str,
+    limit: int = 20,
+):
+    """
+    Get sampled frames for a video, evenly distributed across the timeline.
+    Used for hover-scrub thumbnails in the gallery.
+    """
+    try:
+        async with async_session_maker() as session:
+            # Get all frames for this video, ordered by timestamp
+            frames_query = sa.text("""
+                SELECT fs.id AS frame_id, fs.frame_number, fs.timestamp_seconds
+                FROM frame_samples fs
+                JOIN jobs j ON fs.job_id = j.job_id
+                WHERE fs.scene_id = :video_id
+                ORDER BY fs.frame_number ASC
+            """)
+            result = await session.execute(frames_query, {"video_id": video_id})
+            all_frames = result.fetchall()
+
+            if not all_frames:
+                return {"frames": [], "total": 0}
+
+            # Evenly sample if there are more frames than the limit
+            total = len(all_frames)
+            if total <= limit:
+                sampled = all_frames
+            else:
+                step = total / limit
+                indices = [int(i * step) for i in range(limit)]
+                sampled = [all_frames[i] for i in indices]
+
+            frames = [
+                {
+                    "frame_id": f.frame_id,
+                    "frame_number": f.frame_number,
+                    "timestamp_seconds": f.timestamp_seconds,
+                    "thumbnail_url": f"/api/frames/{f.frame_id}/image",
+                }
+                for f in sampled
+            ]
+
+            return {"frames": frames, "total": total}
+
+    except Exception as e:
+        logger.error("Failed to get video frames", video_id=video_id, error=str(e))
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -690,13 +776,13 @@ async def get_text_based_suggestions(
     # current_user = Depends(get_current_user)  # TODO: Enable auth when ready
 ):
     """
-    Generate tag suggestions based on scene description, title, and optionally OCR text.
+    Generate tag suggestions based on video description, title, and optionally OCR text.
     
-    Uses CLIP text encoder to match scene text with tag embeddings.
-    Excludes tags that already exist on the scene.
+    Uses CLIP text encoder to match video text with tag embeddings.
+    Excludes tags that already exist on the video.
     
     Args:
-        scene_id: Video scene ID
+        video_id: Video ID
         request: Configuration for text-based suggestions
     
     Returns:
